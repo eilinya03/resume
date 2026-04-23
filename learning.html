@@ -509,6 +509,14 @@
             opacity: 1;
             transform: translateY(0);
         }
+        /* 如果JS加载失败，3秒后自动显示 */
+        @media (prefers-reduced-motion: no-preference) {
+            .reveal { animation: reveal-fallback 0.7s ease 3s forwards; }
+        }
+        @keyframes reveal-fallback {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reveal.visible { animation: none; }
 
         /* ===== 移动端 ===== */
         @media (max-width: 768px) {
@@ -923,26 +931,58 @@ graph TD
             el.textContent = el.classList.contains('checked') ? '✓' : '';
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script>
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'default',
-            themeVariables: {
-                primaryColor: '#4f46e5',
-                primaryTextColor: '#fff',
-                primaryBorderColor: '#4f46e5',
-                lineColor: '#a0a5b9',
-                secondaryColor: '#818cf8',
-                tertiaryColor: '#ec4899',
-                fontFamily: 'Inter, Noto Sans SC, sans-serif'
-            },
-            flowchart: {
-                useMaxWidth: true,
-                htmlLabels: true,
-                curve: 'basis'
+        // Mermaid.js 加载（带CDN回退）
+        (function() {
+            function loadScript(src, onload, onerror) {
+                var s = document.createElement('script');
+                s.src = src;
+                s.onload = onload;
+                s.onerror = onerror;
+                document.head.appendChild(s);
             }
-        });
-    </script>
+            var cdns = [
+                'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
+                'https://unpkg.com/mermaid@10/dist/mermaid.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js'
+            ];
+            function tryLoad(i) {
+                if (i >= cdns.length) {
+                    console.warn('Mermaid CDN all failed');
+                    // 降级：将 mermaid 代码块显示为预格式化文本
+                    document.querySelectorAll('.mermaid').forEach(function(el) {
+                        el.style.whiteSpace = 'pre-wrap';
+                        el.style.fontFamily = 'monospace';
+                        el.style.fontSize = '0.85rem';
+                        el.style.color = 'var(--text-secondary)';
+                        el.style.background = 'var(--bg)';
+                        el.style.padding = '1rem';
+                        el.style.borderRadius = '8px';
+                    });
+                    return;
+                }
+                loadScript(cdns[i], function() {
+                    mermaid.initialize({
+                        startOnLoad: true,
+                        theme: 'default',
+                        themeVariables: {
+                            primaryColor: '#4f46e5',
+                            primaryTextColor: '#fff',
+                            primaryBorderColor: '#4f46e5',
+                            lineColor: '#a0a5b9',
+                            secondaryColor: '#818cf8',
+                            tertiaryColor: '#ec4899',
+                            fontFamily: 'Inter, Noto Sans SC, sans-serif'
+                        },
+                        flowchart: {
+                            useMaxWidth: true,
+                            htmlLabels: true,
+                            curve: 'basis'
+                        }
+                    });
+                }, function() { tryLoad(i + 1); });
+            }
+            tryLoad(0);
+        })();
 </body>
 </html>
