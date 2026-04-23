@@ -88,6 +88,7 @@
             padding-top: 80px;
             background: linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
             position: relative;
+            overflow: hidden;
         }
         .hero::before {
             content: '';
@@ -99,11 +100,21 @@
             background: radial-gradient(ellipse at top right, rgba(79,70,229,0.06) 0%, transparent 60%);
             pointer-events: none;
         }
+        #particles-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
         .hero-inner {
             max-width: 800px;
             padding: 0 2rem;
             text-align: center;
             position: relative;
+            z-index: 1;
         }
         .hero-label {
             display: inline-flex;
@@ -148,6 +159,20 @@
             margin: 0 auto 2rem;
             animation: fadeInUp 0.6s ease 0.2s forwards;
             opacity: 0;
+            min-height: 1.8em;
+        }
+        .typewriter-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.1em;
+            background: var(--accent);
+            margin-left: 2px;
+            vertical-align: text-bottom;
+            animation: cursor-blink 0.8s step-end infinite;
+        }
+        @keyframes cursor-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
         .hero-info-row {
             display: flex;
@@ -276,7 +301,6 @@
         .about-text p { margin-bottom: 1.2rem; }
         .about-text strong { color: var(--text); font-weight: 600; }
 
-        /* 紧凑信息卡片 */
         .info-compact {
             display: flex;
             gap: 0.8rem;
@@ -299,21 +323,12 @@
             transform: translateY(-2px);
             box-shadow: var(--shadow);
         }
-        .info-chip .icon {
-            font-size: 1.1rem;
-        }
-        .info-chip .label {
-            font-weight: 600;
-            color: var(--text);
-        }
-        .info-chip .value {
-            color: var(--text-muted);
-        }
+        .info-chip .icon { font-size: 1.1rem; }
+        .info-chip .label { font-weight: 600; color: var(--text); }
+        .info-chip .value { color: var(--text-muted); }
 
         /* ===== 经历时间线 ===== */
-        .timeline {
-            position: relative;
-        }
+        .timeline { position: relative; }
         .timeline::before {
             content: '';
             position: absolute;
@@ -515,10 +530,7 @@
             padding: 3rem 2rem;
             text-align: center;
         }
-        .footer-content {
-            max-width: 700px;
-            margin: 0 auto;
-        }
+        .footer-content { max-width: 700px; margin: 0 auto; }
         .contact-row {
             display: flex;
             justify-content: center;
@@ -587,14 +599,14 @@
         </div>
     </nav>
 
-    <!-- Hero -->
     <section class="hero">
+        <canvas id="particles-canvas"></canvas>
         <div class="hero-inner">
             <div class="hero-label">
                 <span class="dot"></span>正在转型AI产品经理
             </div>
             <h1>用设计思维<br>构建<span class="accent">AI产品</span></h1>
-            <p class="hero-subtitle">产品设计专业应届本科毕业生 · 以用户视角驱动AI技术落地 · 目标：南京</p>
+            <p class="hero-subtitle" id="typewriter"></p>
             <div class="hero-info-row">
                 <div class="hero-info-chip"><span class="icon">🎓</span>本科 · 产品设计</div>
                 <div class="hero-info-chip"><span class="icon">📍</span>求职城市：南京</div>
@@ -626,7 +638,6 @@
         </div>
     </section>
 
-    <!-- 关于我 -->
     <section id="about" class="reveal">
         <span class="section-tag">01 / About Me</span>
         <h2 class="section-title">关于我</h2>
@@ -648,7 +659,6 @@
         </div>
     </section>
 
-    <!-- 经历 -->
     <section id="experience" class="reveal">
         <span class="section-tag">02 / Experience</span>
         <h2 class="section-title">经历与项目</h2>
@@ -747,7 +757,6 @@
         </div>
     </section>
 
-    <!-- 技能 -->
     <section id="skills" class="reveal">
         <span class="section-tag">03 / Skills</span>
         <h2 class="section-title">技能体系</h2>
@@ -810,7 +819,6 @@
         </div>
     </section>
 
-    <!-- 学习CTA -->
     <section class="reveal">
         <div class="learning-cta">
             <h2>我的AI产品学习之旅</h2>
@@ -819,7 +827,6 @@
         </div>
     </section>
 
-    <!-- 页脚 -->
     <footer id="contact">
         <div class="footer-content">
             <div class="contact-row">
@@ -832,19 +839,142 @@
     </footer>
 
     <script>
-        // 导航滚动
+        // ===== Canvas粒子动画 =====
+        (function() {
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let mouse = { x: null, y: null };
+            const PARTICLE_COUNT = window.innerWidth < 768 ? 40 : 70;
+            const CONNECT_DISTANCE = 140;
+            const MOUSE_RADIUS = 180;
+
+            function resize() {
+                canvas.width = canvas.parentElement.offsetWidth;
+                canvas.height = canvas.parentElement.offsetHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            canvas.addEventListener('mousemove', e => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+            });
+            canvas.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
+            canvas.addEventListener('click', e => {
+                const rect = canvas.getBoundingClientRect();
+                for (let i = 0; i < 4; i++) {
+                    particles.push(new Particle(e.clientX - rect.left, e.clientY - rect.top));
+                }
+            });
+
+            class Particle {
+                constructor(x, y) {
+                    this.x = x || Math.random() * canvas.width;
+                    this.y = y || Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.8;
+                    this.vy = (Math.random() - 0.5) * 0.8;
+                    this.size = Math.random() * 2.5 + 1;
+                    this.baseSize = this.size;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                    // 鼠标排斥
+                    if (mouse.x !== null) {
+                        const dx = this.x - mouse.x;
+                        const dy = this.y - mouse.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < MOUSE_RADIUS) {
+                            const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
+                            this.x += dx * force * 0.03;
+                            this.y += dy * force * 0.03;
+                        }
+                    }
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(180, 185, 200, 0.6)';
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            function drawLines() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < CONNECT_DISTANCE) {
+                            const opacity = (1 - dist / CONNECT_DISTANCE) * 0.25;
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(160, 165, 185, ${opacity})`;
+                            ctx.lineWidth = 0.8;
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                drawLines();
+                requestAnimationFrame(animate);
+            }
+
+            initParticles();
+            animate();
+        })();
+
+        // ===== 打字机效果 =====
+        (function() {
+            const el = document.getElementById('typewriter');
+            const text = '产品设计专业应届本科毕业生 · 正在转型AI产品经理 · 以用户思维驱动AI产品落地';
+            let index = 0;
+            const speed = 80;
+
+            function type() {
+                if (index < text.length) {
+                    el.textContent = text.substring(0, index + 1);
+                    index++;
+                    setTimeout(type, speed + Math.random() * 40);
+                } else {
+                    // 显示光标
+                    el.innerHTML = text + '<span class="typewriter-cursor"></span>';
+                }
+            }
+
+            // 延迟启动，等hero fadeIn动画完成
+            setTimeout(type, 800);
+        })();
+
+        // ===== 导航滚动 =====
         window.addEventListener('scroll', () => {
             const nav = document.getElementById('navbar');
             nav.classList.toggle('scrolled', window.scrollY > 50);
         });
 
-        // 滚动渐显
+        // ===== 滚动渐显 =====
         const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
         }, { threshold: 0.1 });
         document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-        // 数字计数
+        // ===== 数字计数 =====
         const countObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -866,7 +996,7 @@
         }, { threshold: 0.5 });
         document.querySelectorAll('[data-count]').forEach(el => countObserver.observe(el));
 
-        // 技能条
+        // ===== 技能条 =====
         const skillObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -879,7 +1009,7 @@
         }, { threshold: 0.3 });
         document.querySelectorAll('.skills-grid').forEach(el => skillObserver.observe(el));
 
-        // 平滑滚动
+        // ===== 平滑滚动 =====
         document.querySelectorAll('a[href^="#"]').forEach(a => {
             a.addEventListener('click', function(e) {
                 e.preventDefault();
