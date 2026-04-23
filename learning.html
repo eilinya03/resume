@@ -172,6 +172,33 @@
             font-size: 1rem;
         }
 
+        /* ===== 知识树思维导图 ===== */
+        .mindmap-container {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+        .mindmap-container .mermaid {
+            display: flex;
+            justify-content: center;
+            min-width: 700px;
+        }
+        .mindmap-note {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            padding: 1rem 2rem;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+        }
+        .mindmap-note p { margin-bottom: 0.4rem; }
+        .mindmap-note p:last-child { margin-bottom: 0; color: var(--text-muted); font-size: 0.85rem; }
+
         /* ===== 日历 ===== */
         .calendar-header {
             display: flex;
@@ -531,6 +558,79 @@
         </div>
     </section>
 
+    <!-- 知识树概览 -->
+    <section id="knowledge-tree" class="reveal">
+        <span class="section-tag">Knowledge Map</span>
+        <h2 class="section-title">AI产品经理 · 知识全景图</h2>
+        <p class="section-desc">12周完整知识体系 · 每天从树上一个知识点出发 · 不脱离整体</p>
+        <div class="mindmap-container">
+            <div class="mermaid">
+graph TD
+    Root[🎯 AI产品经理] --> A[01 AI产品思维与认知<br/>Week 1-2]
+    Root --> B[02 AI技术直觉<br/>Week 3-4]
+    Root --> C[03 产品方法论<br/>Week 5-6]
+    Root --> D[04 数据与工程协作<br/>Week 7-8]
+    Root --> E[05 行业赛道与竞品<br/>Week 9-10]
+    Root --> F[06 AI产品设计实战<br/>Week 11-12]
+    Root --> G[07 求职冲刺<br/>持续进行]
+
+    A --> A1[什么是AI PM]
+    A --> A2[AI vs 传统PM]
+    A --> A3[产品分类：Copilot/Agent]
+    A --> A4[核心指标与误区]
+
+    B --> B1[大模型原理直觉]
+    B --> B2[Prompt Engineering]
+    B --> B3[RAG：AI查字典]
+    B --> B4[Agent与多模态]
+    B --> B5[AI能力边界]
+
+    C --> C1[AI需求分析]
+    C --> C2[什么时候该用AI]
+    C --> C3[AI交互设计]
+    C --> C4[产品评估体系]
+    C --> C5[冷启动与数据飞轮]
+
+    D --> D1[训练数据与反馈数据]
+    D --> D2[数据标注质量管理]
+    D --> D3[与算法协作]
+    D --> D4[模型迭代流程]
+    D --> D5[Python产品视角]
+
+    E --> E1[AI+办公赛道]
+    E --> E2[AI+教育赛道]
+    E --> E3[AI+内容/AIGC]
+    E --> E4[垂直赛道特殊性]
+    E --> E5[竞品分析框架]
+    E --> E6[商业模式]
+
+    F --> F1[从0设计AI功能]
+    F --> F2[AI产品PRD模板]
+    F --> F3[用户体验地图]
+    F --> F4[大模型选型]
+    F --> F5[毕业设计方案]
+
+    G --> G1[简历优化]
+    G --> G2[面试高频考点]
+    G --> G3[项目复盘]
+    G --> G4[模拟面试]
+
+    style Root fill:#4f46e5,stroke:none,color:#fff
+    style A fill:#818cf8,stroke:none,color:#fff
+    style B fill:#ec4899,stroke:none,color:#fff
+    style C fill:#10b981,stroke:none,color:#fff
+    style D fill:#f59e0b,stroke:none,color:#fff
+    style E fill:#6366f1,stroke:none,color:#fff
+    style F fill:#8b5cf6,stroke:none,color:#fff
+    style G fill:#4f46e5,stroke:none,color:#fff
+            </div>
+        </div>
+        <div class="mindmap-note">
+            <p>📌 当前位置：<strong>Day 1 · 01-A1 · 什么是AI产品经理</strong></p>
+            <p>每天的学习任务都锚定在知识树的某个节点上，确保不偏离主线。</p>
+        </div>
+    </section>
+
     <!-- 日历 -->
     <section id="calendar" class="reveal">
         <span class="section-tag">Calendar</span>
@@ -822,6 +922,27 @@
             el.classList.toggle('checked');
             el.textContent = el.classList.contains('checked') ? '✓' : '';
         }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#4f46e5',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#4f46e5',
+                lineColor: '#a0a5b9',
+                secondaryColor: '#818cf8',
+                tertiaryColor: '#ec4899',
+                fontFamily: 'Inter, Noto Sans SC, sans-serif'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
     </script>
 </body>
 </html>
