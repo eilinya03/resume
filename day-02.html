@@ -219,8 +219,8 @@
             <h1>AI产品的三种形态，边界在哪？</h1>
             <p>Copilot、Agent、嵌入式AI——一个产品可以同时是两种吗？</p>
             <div class="status-badge" id="statusBadge">
-                <span id="statusDot">⏳</span>
-                <span id="statusText">等待学习</span>
+                <span id="statusDot">✅</span>
+                <span id="statusText">已完成 · 思考讨论 16/30</span>
             </div>
         </div>
     </div>
@@ -277,7 +277,7 @@
             <div class="section-label">✅ 思考任务 · 完成后在微信回复"我学习好了"</div>
             <ul class="task-list">
                 <li class="task-item">
-                    <div class="task-status todo" id="task1-status"></div>
+                    <div class="task-status done" id="task1-status">✓</div>
                     <div class="task-content">
                         <div class="task-title">任务一：分类实战（15分钟）</div>
                         <div class="task-desc">
@@ -288,7 +288,7 @@
                     </div>
                 </li>
                 <li class="task-item">
-                    <div class="task-status todo" id="task2-status"></div>
+                    <div class="task-status done" id="task2-status">✓</div>
                     <div class="task-content">
                         <div class="task-title">任务二：制造矛盾（20分钟）</div>
                         <div class="task-desc">
@@ -299,7 +299,7 @@
                     </div>
                 </li>
                 <li class="task-item">
-                    <div class="task-status todo" id="task3-status"></div>
+                    <div class="task-status done" id="task3-status">✓</div>
                     <div class="task-content">
                         <div class="task-title">任务三：一句话说服（15分钟）</div>
                         <div class="task-desc">
@@ -375,12 +375,37 @@ graph LR
         <div class="card quiz-section">
             <div class="section-label">🎯 微信思考测验</div>
             <div id="quizResult">
-                <p style="color:var(--text-muted); font-size:0.9rem;">
-                    完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
-                    我会出3道开放性问题，没有标准答案，评估你的思考过程。
-                </p>
+                <div style="margin-bottom:1rem;">
+                    <span class="score-display">思考讨论 16/30</span>
+                </div>
+                <div style="font-size:0.88rem; line-height:1.9; color:var(--text-secondary);">
+                    <p style="margin-bottom:0.8rem;"><strong>讨论主题：</strong>抖音是嵌入式AI、Copilot还是Agent？</p>
+                    
+                    <p style="margin-bottom:0.5rem; color:var(--text);"><strong>📝 思考过程记录</strong></p>
+                    <p>你最初直觉判断抖音是 Copilot，理由是「算法根据用户行为推荐内容」。但这个理由描述的是「算法怎么工作」，不是「为什么是 Copilot」——这是产品经理思考时常见的一个陷阱：回答了一个相关问题，但没回答被问的问题。</p>
+                    <p>在被追问「主动推送的产品能叫 Copilot 吗」之后，你承认了矛盾：抖音不是用户主动请求的，是算法主动推送的。这个修正比坚持错误判断更有价值。</p>
+                    <p>最终你给出了一个核心判断：<strong>「用户使用比底层技术更重要」</strong>。这是个扎实的产品经理视角——分类不看技术实现，看用户怎么感知、怎么使用。</p>
+                    
+                    <p style="margin-bottom:0.5rem; margin-top:1rem; color:var(--text);"><strong>💡 思考亮点</strong></p>
+                    <p>「用户使用比底层技术更重要」这句话抓住了产品经理分类的核心标准。不是看推荐系统用了什么模型，是看用户打开抖音时感受到的是什么——是被动接收内容，还是在选项中做选择？这个判断比背定义有用得多。</p>
+                    
+                    <p style="margin-bottom:0.5rem; margin-top:1rem; color:var(--text);"><strong>⚠️ 可以加强</strong></p>
+                    <p><strong>1. 初始判断容易直觉化。</strong>你第一反应是「抖音是 Copilot」，但理由支撑不够。下次可以先问一句「我是从哪个维度判断的」再下结论。</p>
+                    <p><strong>2. 被追问时容易答非所问。</strong>我问「为什么是 Copilot」，你答的是「算法怎么工作」。面试里这种「答B而不是答A」的情况会让面试官觉得你没听清问题，或者还没想清楚。</p>
+                    <p><strong>3. 缺少反面假设。</strong>你一直坚持「抖音是 Copilot」直到被矛盾戳破，才换方向。如果一开始你就主动问自己「抖音为什么可能不是 Copilot」，思考会更完整。</p>
+                    <p><strong>4. 没有给出验证思路。</strong>你说「用户使用更重要」，那怎么验证？如果两个产品用同样的推荐算法，但用户感知完全不同，你怎么通过用户访谈或数据判断该归到哪一类？</p>
+                    
+                    <p style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border-light);">
+                        <strong>📌 本次弱项：</strong>初始判断直觉化、被追问时答非所问、缺少主动反面假设、验证思路缺失
+                    </p>
+                </div>
             </div>
-            <div class="weak-tags" id="weakTags"></div>
+            <div class="weak-tags" id="weakTags">
+                <span class="weak-tag">初始判断直觉化</span>
+                <span class="weak-tag">答非所问</span>
+                <span class="weak-tag">缺少反面假设</span>
+                <span class="weak-tag">验证思路缺失</span>
+            </div>
         </div>
     </section>
 

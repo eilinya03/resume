@@ -503,8 +503,8 @@ graph TD
         // 日历
         let currentDate = new Date();
         const studyStart = new Date(2026, 3, 23);
-        const completedDaysList = [1]; // 已完成的天数
-        const avgScoreVal = 15;
+        const completedDaysList = [1, 2]; // 已完成的天数
+        const avgScoreVal = 15.5;
         const studyDays = 84;
         const dayTopics = [
             'AI PM全景图','AI vs 传统PM','AI产品分类','大模型直觉','Transformer原理',
@@ -573,7 +573,7 @@ graph TD
         document.getElementById('completedDays').textContent = completedDaysList.length;
         document.getElementById('avgScore').textContent = avgScoreVal > 0 ? avgScoreVal + '/30' : '--';
         document.getElementById('totalProgress').textContent = Math.round((completedDaysList.length / studyDays) * 100) + '%';
-        document.getElementById('phase1-bar').style.width = Math.min(100, (completedDaysList.length / 28) * 100) + '%';
+        document.getElementById('phase1-bar').style.width = Math.min(100, (completedDaysList.filter(d => d <= 28).length / 28) * 100) + '%';
 
         (function() {
             function loadScript(src, onload, onerror) {
