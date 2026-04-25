@@ -179,8 +179,8 @@
             <h1>什么是AI产品经理？</h1>
             <p>从"产品经理"到"AI产品经理"，差的不只是一个前缀。</p>
             <div class="status-badge" id="statusBadge">
-                <span id="statusDot">⏳</span>
-                <span id="statusText">等待学习</span>
+                <span id="statusDot">✅</span>
+                <span id="statusText">已完成 · 测验 15/30 分</span>
             </div>
         </div>
     </div>
@@ -317,12 +317,17 @@ graph LR
         <div class="card quiz-section">
             <div class="section-label">🎯 微信测验得分</div>
             <div id="quizResult">
-                <p style="color:var(--text-muted); font-size:0.9rem;">
-                    完成学习后，在微信回复"我学习好了"进行测验得分。<br>
-                    我会出3道题，评分并记录弱项。
+                <div class="score-display">📊 15 / 30 分</div>
+                <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:0.8rem;">
+                    第1题 7分：用工业设计师语言解释AI PM，抓到"设计人机协作流程"这个核心 ✅<br>
+                    第2题 5分：混了性能指标和内容指标，"去AI感"抓得准但维度拆分不够细 ⚠️<br>
+                    第3题 7分：协作流程对比清楚，AI PM vs 传统PM的差异说得明白 ✅
                 </p>
             </div>
-            <div class="weak-tags" id="weakTags"></div>
+            <div class="weak-tags" id="weakTags">
+                <span class="weak-tag">效果评估维度拆分</span>
+                <span class="weak-tag">Day 5 复现</span>
+            </div>
         </div>
     </section>
 

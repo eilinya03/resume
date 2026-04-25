@@ -218,11 +218,21 @@
         </div>
     </section>
 
+    <!-- 学习理念 -->
+    <section class="reveal" style="margin-bottom: -2rem;">
+        <div style="background: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(236,72,153,0.06)); border: 1px solid rgba(79,70,229,0.15); border-radius: 16px; padding: 1.5rem 2rem; max-width: 900px; margin: 0 auto;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent); margin-bottom: 0.6rem; letter-spacing: 0.05em;">🧠 学习理念</div>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.8;">
+                这个学习计划不做"知识灌输"。每天给你一个<strong>没有标准答案的真实问题</strong>，给你一些互相矛盾的线索，逼你自己走一遍"发现问题→拆解问题→验证假设"的完整思考流程。产品经理的核心素养不是记住答案，是能在模糊中做判断。
+            </p>
+        </div>
+    </section>
+
     <!-- 知识树 -->
     <section id="knowledge-tree" class="reveal">
         <span class="section-tag">Knowledge Map</span>
         <h2 class="section-title">AI产品经理 · 知识全景图</h2>
-        <p class="section-desc">7大知识域 · 84天全覆盖 · 每天锚定一个知识点</p>
+        <p class="section-desc">7大知识域 · 84天全覆盖 · 每天锚定一个开放性问题</p>
         <div class="mindmap-container">
             <div class="mermaid">
 graph TD
@@ -272,7 +282,7 @@ graph TD
             </div>
         </div>
         <div class="mindmap-note">
-            <p>📌 <strong>当前位置：等待Day 1开始</strong> · 点击下方日历或今日任务开始学习</p>
+            <p>📌 <strong>当前位置：Day 2 · AI产品的三种形态，边界在哪？</strong> · 点击下方日历或今日任务开始学习</p>
         </div>
     </section>
 
@@ -301,8 +311,8 @@ graph TD
     <section id="today" class="reveal">
         <div class="today-cta">
             <h3>📚 今日学习任务</h3>
-            <p>Day 1 · 什么是AI产品经理？</p>
-            <a href="day-01.html" class="btn-white">进入今日学习 →</a>
+            <p>Day 2 · AI产品的三种形态，边界在哪？</p>
+            <a href="day-02.html" class="btn-white">进入今日学习 →</a>
         </div>
     </section>
 
@@ -492,7 +502,9 @@ graph TD
 
         // 日历
         let currentDate = new Date();
-        const studyStart = new Date(2026, 3, 24);
+        const studyStart = new Date(2026, 3, 23);
+        const completedDaysList = [1]; // 已完成的天数
+        const avgScoreVal = 15;
         const studyDays = 84;
         const dayTopics = [
             'AI PM全景图','AI vs 传统PM','AI产品分类','大模型直觉','Transformer原理',
@@ -527,16 +539,18 @@ graph TD
                 const date = new Date(year, month, day);
                 const dayDiff = Math.floor((date - studyStart) / (1000*60*60*24));
                 const isStudyDay = dayDiff >= 0 && dayDiff < studyDays;
+                const dayNum = dayDiff + 1;
+                const isCompleted = completedDaysList.includes(dayNum);
                 const isToday = date.toDateString() === today.toDateString();
                 const isPast = date < today && !isToday;
 
                 const el = document.createElement('a');
                 el.className = 'calendar-day';
                 if (isToday) el.classList.add('today');
+                else if (isCompleted) el.classList.add('completed');
                 else if (isStudyDay && isPast) el.classList.add('late');
 
                 if (isStudyDay) {
-                    const dayNum = dayDiff + 1;
                     el.href = `day-${pad2(dayNum)}.html`;
                 }
 
@@ -554,6 +568,12 @@ graph TD
             generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
         }
         generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+
+        // 初始化统计数字
+        document.getElementById('completedDays').textContent = completedDaysList.length;
+        document.getElementById('avgScore').textContent = avgScoreVal > 0 ? avgScoreVal + '/30' : '--';
+        document.getElementById('totalProgress').textContent = Math.round((completedDaysList.length / studyDays) * 100) + '%';
+        document.getElementById('phase1-bar').style.width = Math.min(100, (completedDaysList.length / 28) * 100) + '%';
 
         (function() {
             function loadScript(src, onload, onerror) {

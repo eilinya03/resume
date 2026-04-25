@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 2 · AI产品的三种形态，边界在哪？ | 魏林桠的AI学习之旅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+            --text-secondary: #4a5568; --text-muted: #718096;
+            --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+            --border: #e2e8f0; --border-light: #edf2f7;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --thinking: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.8; overflow-x: hidden;
+        }
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s;
+        }
+        nav.scrolled {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+        }
+        .nav-inner { max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none; }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.8rem; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .hero {
+            min-height: 40vh; display: flex; align-items: center; justify-content: center;
+            padding-top: 80px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+            color: white; text-align: center;
+        }
+        .hero-content { max-width: 700px; padding: 0 2rem; }
+        .hero-tag { font-size: 0.75rem; opacity: 0.8; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+        .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: 0.6rem; }
+        .hero p { opacity: 0.85; font-size: 0.95rem; }
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 1rem; background: rgba(255,255,255,0.2);
+            border-radius: 50px; font-size: 0.8rem; margin-top: 1rem; backdrop-filter: blur(8px);
+        }
+
+        section { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+        }
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--accent);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+
+        /* 今日问题 */
+        .question-box {
+            background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(236,72,153,0.08));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .question-box .q-mark {
+            font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-right: 0.5rem;
+        }
+
+        /* 线索卡片 */
+        .clue-grid { display: flex; flex-direction: column; gap: 1rem; }
+        .clue-card {
+            background: var(--bg); border: 1px solid var(--border-light);
+            border-radius: 12px; padding: 1.2rem;
+            position: relative;
+        }
+        .clue-card::before {
+            content: '💡'; position: absolute; top: 1.2rem; left: 1.2rem;
+        }
+        .clue-card .clue-text {
+            padding-left: 2rem; font-size: 0.92rem; line-height: 1.8; color: var(--text-secondary);
+        }
+        .clue-card .clue-source {
+            padding-left: 2rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+        }
+
+        /* 思考任务 */
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex; align-items: flex-start; gap: 0.8rem;
+            padding: 1rem 0; border-bottom: 1px solid var(--border-light);
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-status {
+            width: 22px; height: 22px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 0.1rem; font-size: 0.75rem;
+        }
+        .task-status.todo { border: 2px solid var(--border); background: transparent; }
+        .task-status.done { background: var(--success); color: white; border: 2px solid var(--success); }
+        .task-content { flex: 1; }
+        .task-title { font-weight: 600; font-size: 0.9rem; }
+        .task-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.7; }
+        .task-hint {
+            background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px; padding: 0.6rem 0.8rem;
+            font-size: 0.78rem; color: var(--warning); margin-top: 0.5rem;
+        }
+
+        /* 我的视角 */
+        .perspective-box {
+            background: var(--bg); border-radius: 12px; padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+        .perspective-box .perspective-header {
+            font-size: 0.8rem; font-weight: 700; color: var(--accent);
+            margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .perspective-box .perspective-text {
+            font-size: 0.92rem; line-height: 1.9; color: var(--text-secondary);
+        }
+        .perspective-box .perspective-text p { margin-bottom: 0.8rem; }
+        .perspective-box .counter-arg {
+            background: rgba(239,68,68,0.05); border-left: 3px solid var(--danger);
+            padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
+            font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.8rem;
+        }
+
+        /* 思维导图 */
+        .mindmap-local {
+            background: var(--bg); border-radius: 12px; padding: 1rem; overflow-x: auto;
+        }
+
+        /* 测验区 */
+        .quiz-section {
+            background: linear-gradient(135deg, rgba(79,70,229,0.05), rgba(236,72,153,0.05));
+            border: 1px solid rgba(79,70,229,0.15);
+        }
+        .score-display {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.4rem 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            color: white; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+        }
+        .weak-tags {
+            display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;
+        }
+        .weak-tag {
+            padding: 0.2rem 0.6rem; background: rgba(245,158,11,0.1);
+            color: var(--warning); border-radius: 20px; font-size: 0.72rem;
+            border: 1px solid rgba(245,158,11,0.2);
+        }
+
+        /* 视频 */
+        .video-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .video-item {
+            display: flex; gap: 1rem; padding: 0.8rem; background: var(--bg);
+            border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.3s;
+        }
+        .video-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }
+        .video-thumb {
+            width: 100px; height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+        .video-info { flex: 1; }
+        .video-title { font-weight: 600; font-size: 0.85rem; }
+        .video-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        /* 导航 */
+        .nav-arrows {
+            display: flex; justify-content: space-between; margin-top: 2rem;
+        }
+        .nav-arrow {
+            padding: 0.6rem 1.2rem; border: 1px solid var(--border);
+            background: var(--surface); border-radius: 10px;
+            text-decoration: none; color: var(--text);
+            font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
+        }
+        .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-arrow.disabled { opacity: 0.4; pointer-events: none; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            section { padding: 2rem 1rem; }
+            .card { padding: 1.2rem; }
+            .video-item { flex-direction: column; }
+            .video-thumb { width: 100%; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="learning.html" class="nav-logo">← 返回学习主页</a>
+            <ul class="nav-links">
+                <li><a href="learning.html">学习主页</a></li>
+                <li><a href="index.html">简历</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-tag">DAY 2 · WEEK 1 · 01-A3</div>
+            <h1>AI产品的三种形态，边界在哪？</h1>
+            <p>Copilot、Agent、嵌入式AI——一个产品可以同时是两种吗？</p>
+            <div class="status-badge" id="statusBadge">
+                <span id="statusDot">⏳</span>
+                <span id="statusText">等待学习</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日问题 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎯 今日问题</div>
+            <div class="question-box">
+                <span class="q-mark">Q.</span>
+                行业里说AI产品分三种：Copilot（副驾驶，人主导AI辅助）、Agent（代理，AI自主执行）、嵌入式AI（用户感知不到AI）。<br><br>
+                但你看 GitHub Copilot，它主动补全代码但从不主动运行——它是Copilot还是Agent？iPhone键盘预测你下一个词，用户几乎无感知——这是嵌入式AI还是Copilot？AutoGPT号称能自主拆解任务，但经常完不成需要人工救场——它算Agent吗？<br><br>
+                <strong>这三类的边界到底在哪？一个产品可以同时是两种吗？</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- 线索卡片 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">💡 线索卡片 · 我只给碎片，拼图你自己拼</div>
+            <div class="clue-grid">
+                <div class="clue-card">
+                    <div class="clue-text">
+                        GitHub Copilot 的工程师说过一句话："我们从不让Copilot主动运行代码，因为一旦运行了就出事了。"但它确实会"主动"预测你下一步要写什么——这种"主动预测但不主动行动"的边界，是谁定义的？是技术限制还是产品设计选择？
+                    </div>
+                    <div class="clue-source">来源：GitHub Copilot 官方博客 · 产品设计访谈</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        2025年有个产品叫 AutoGPT，宣传口号是"完全自主的AI代理"。结果用户实测发现：它拆解任务很积极，执行起来漏洞百出，最后还得人兜底。那问题来了——"号称Agent但经常需要人救场"的产品，它到底该被归为Agent还是Copilot？分类应该看"能力"还是看"实际体验"？
+                    </div>
+                    <div class="clue-source">来源：AutoGPT 社区实测反馈 · 2025年4月</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        iPhone键盘的预测输入，用户几乎感觉不到AI的存在——没有对话框、没有按钮、没有"AI"两个字。但它的确在用机器学习预测你的用词习惯。有个产品经理在面试时被问到："这是嵌入式AI还是Copilot？"他犹豫了30秒。面试官笑了："这30秒的思考过程，比你的答案值钱。"
+                    </div>
+                    <div class="clue-source">来源：某大厂AI产品经理面试现场还原</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        美团2026校招AI产品经理提前批的JD里有一条明确要求："能判断一个场景该用Copilot还是Agent，并说明理由。"注意，JD没要求"知道定义"，要求的是"判断并说明理由"——这意味着面试官想听的是你的思考过程，不是你的背诵能力。
+                    </div>
+                    <div class="clue-source">来源：美团2026校招AI产品经理提前批JD</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 思考任务 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">✅ 思考任务 · 完成后在微信回复"我学习好了"</div>
+            <ul class="task-list">
+                <li class="task-item">
+                    <div class="task-status todo" id="task1-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务一：分类实战（15分钟）</div>
+                        <div class="task-desc">
+                            打开你手机或电脑上3个带AI功能的产品（比如微信输入法的AI帮写、Kimi Chat、某个拍照APP的美颜功能）。<br>
+                            对每个产品回答：它更像Copilot、Agent还是嵌入式AI？注意——有些可能介于两者之间，写下来你的判断依据，哪怕你觉得"说不清楚"也要写清楚为什么说不清楚。
+                        </div>
+                        <div class="task-hint">💡 提示：不要查定义再套。凭直觉判断，然后反问自己"为什么我觉得它是这个？"</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task2-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务二：制造矛盾（20分钟）</div>
+                        <div class="task-desc">
+                            从任务一里选一个你最"拿不准"的产品。写出两个论点——论点A认为它是Agent，论点B认为它只是Copilot。<strong>两个论点都要说得通。</strong><br>
+                            关键不是选边站，是让你意识到：分类不是非黑即白的，产品可以同时具备两种属性，取决于你从哪个维度切。
+                        </div>
+                        <div class="task-hint">💡 提示：试着从不同维度切——是"谁主导"？是"用户感知度"？是"自主决策范围"？每个维度可能得出不同结论。</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task3-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务三：一句话说服（15分钟）</div>
+                        <div class="task-desc">
+                            假设面试官问你："你说这个产品为什么是Agent不是Copilot？"用<strong>一句话</strong>回答，这句话要让非技术背景的人听懂。<br>
+                            写完读一遍——如果删掉这句话里任何一个词，意思都不完整，那就对了。如果删掉一半还能懂，说明你还没切到最狠。
+                        </div>
+                        <div class="task-hint">💡 提示：好的产品经理能用一句话把复杂问题说明白。不是省略细节，是找到那个"一旦说出来，其他都不言自明"的关键区别。</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 我的视角 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">👁️ 我的视角 · 这是我个人的看法，不是标准答案</div>
+            <div class="perspective-box">
+                <div class="perspective-header">🤔 我是这样想的...</div>
+                <div class="perspective-text">
+                    <p>我觉得这三类的区别，不应该看"技术能力"，应该看"<strong>谁在做决定</strong>"。Copilot是"你决定，AI帮忙"；Agent是"AI决定，你监督"；嵌入式AI是"你们都没意识到决定已经做完了"。</p>
+                    <p>但这里面有个陷阱——很多产品在不同场景下角色会切换。比如小爱同学，你问它"今天天气"它是Copilot（你主动问，它回答）；你说"每天早上八点告诉我天气"它变成了Agent（它自主执行）；而它在后台学习你的作息偏好、自动调整唤醒灵敏度——这部分你完全无感知，是嵌入式AI。</p>
+                    <p>所以我的结论是：<strong>分类不是给产品贴标签，是给产品在不同场景下的行为贴标签。</strong>一个产品可以同时是三种，取决于用户在哪个场景、哪个时间点、以什么意图使用它。</p>
+                </div>
+                <div class="counter-arg">
+                    <strong>但也有人会反驳我：</strong>如果按照我的说法，几乎所有AI产品都同时是三种，那分类还有什么意义？分类的价值恰恰在于"边界清晰"——如果一个分类体系无法区分任何东西，它就是失败的。你怎么回应这个反驳？你的理由是什么？
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 知识图谱 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🧠 今日知识图谱</div>
+            <div class="mindmap-local">
+                <div class="mermaid">
+graph LR
+    A[AI产品形态] --> B[Copilot<br/>你决定AI帮忙]
+    A --> C[Agent<br/>AI决定你监督]
+    A --> D[嵌入式AI<br/>无感知已发生]
+    B --> B1[GitHub Copilot<br/>预测但不执行]
+    B --> B2[Notion AI<br/>辅助写作]
+    C --> C1[AutoGPT<br/>自主拆解任务]
+    C --> C2[智能客服<br/>自动处理退款]
+    D --> D1[iPhone键盘<br/>预测输入]
+    D --> D2[相册分类<br/>自动识别人脸]
+    B -.-> E[边界模糊<br/>同一个产品可切换]
+    C -.-> E
+    D -.-> E
+                </div>
+            </div>
+            <div id="mindmap-fallback" style="display:none; margin-top:1rem;">
+                <div style="background:var(--bg); border-radius:10px; padding:1.2rem; font-size:0.85rem; line-height:2; color:var(--text-secondary);">
+                    <div style="font-weight:700; color:var(--accent); margin-bottom:0.5rem;">AI产品形态知识树（静态版）</div>
+                    <div>├─ Copilot（你决定，AI帮忙）</div>
+                    <div>│  ├─ GitHub Copilot → 预测但不执行</div>
+                    <div>│  └─ Notion AI → 辅助写作</div>
+                    <div>├─ Agent（AI决定，你监督）</div>
+                    <div>│  ├─ AutoGPT → 自主拆解任务</div>
+                    <div>│  └─ 智能客服 → 自动处理退款</div>
+                    <div>├─ 嵌入式AI（无感知已发生）</div>
+                    <div>│  ├─ iPhone键盘 → 预测输入</div>
+                    <div>│  └─ 相册分类 → 自动识别人脸</div>
+                    <div>└─ 边界模糊 → 同一个产品在不同场景可切换角色</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 测验得分 -->
+    <section class="reveal">
+        <div class="card quiz-section">
+            <div class="section-label">🎯 微信思考测验</div>
+            <div id="quizResult">
+                <p style="color:var(--text-muted); font-size:0.9rem;">
+                    完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
+                    我会出3道开放性问题，没有标准答案，评估你的思考过程。
+                </p>
+            </div>
+            <div class="weak-tags" id="weakTags"></div>
+        </div>
+    </section>
+
+    <!-- 拓展视频 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎬 拓展资源</div>
+            <div class="video-list">
+                <a href="https://www.bilibili.com/read/cv39798465" target="_blank" class="video-item">
+                    <div class="video-thumb">📖</div>
+                    <div class="video-info">
+                        <div class="video-title">在大模型时代，我们如何有效的去学习/入门AI产品经理？</div>
+                        <div class="video-meta">B站专栏 · AI产品经理分类与能力模型详解</div>
+                    </div>
+                </a>
+                <a href="https://www.woshipm.com/ai/6363074.html" target="_blank" class="video-item">
+                    <div class="video-thumb">🔗</div>
+                    <div class="video-info">
+                        <div class="video-title">从 Chatbot 到自主智能体：AI Agent 的产品形态演进</div>
+                        <div class="video-meta">人人都是产品经理 · L2→L3→L4→L5分级详解</div>
+                    </div>
+                </a>
+                <a href="https://www.bilibili.com/list/ml1538904134" target="_blank" class="video-item">
+                    <div class="video-thumb">▶</div>
+                    <div class="video-info">
+                        <div class="video-title">产品经理基础课程合集</div>
+                        <div class="video-meta">B站收藏夹 · 产品思维与分类方法论</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 导航 -->
+    <section>
+        <div class="nav-arrows">
+            <a href="day-01.html" class="nav-arrow">← 前一天</a>
+            <a href="day-03.html" class="nav-arrow">后一天 →</a>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        (function() {
+            function loadScript(src, onload, onerror) {
+                var s = document.createElement('script');
+                s.src = src; s.onload = onload; s.onerror = onerror;
+                document.head.appendChild(s);
+            }
+            var cdns = [
+                'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
+                'https://unpkg.com/mermaid@10/dist/mermaid.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js'
+            ];
+            var fallbackTimer;
+            function showFallback() {
+                var fb = document.getElementById('mindmap-fallback');
+                if (fb) fb.style.display = 'block';
+                var mm = document.querySelector('.mermaid');
+                if (mm) mm.style.display = 'none';
+            }
+            function tryLoad(i) {
+                if (i >= cdns.length) { showFallback(); return; }
+                fallbackTimer = setTimeout(function() { showFallback(); }, 8000);
+                loadScript(cdns[i], function() {
+                    clearTimeout(fallbackTimer);
+                    if (typeof mermaid !== 'undefined') {
+                        mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }});
+                        mermaid.run({ querySelector: '.mermaid' }).then(function() {}).catch(function() { showFallback(); });
+                    } else { showFallback(); }
+                }, function() { clearTimeout(fallbackTimer); tryLoad(i + 1); });
+            }
+            tryLoad(0);
+        })();
+    </script>
+</body>
+</html>
