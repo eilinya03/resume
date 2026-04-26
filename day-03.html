@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 3 · 准确率 vs 用户满意度，AI产品经理该追哪个？ | 魏林桠的AI学习之旅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+            --text-secondary: #4a5568; --text-muted: #718096;
+            --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+            --border: #e2e8f0; --border-light: #edf2f7;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --thinking: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.8; overflow-x: hidden;
+        }
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s;
+        }
+        nav.scrolled {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+        }
+        .nav-inner { max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none; }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.8rem; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .hero {
+            min-height: 40vh; display: flex; align-items: center; justify-content: center;
+            padding-top: 80px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+            color: white; text-align: center;
+        }
+        .hero-content { max-width: 700px; padding: 0 2rem; }
+        .hero-tag { font-size: 0.75rem; opacity: 0.8; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+        .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: 0.6rem; }
+        .hero p { opacity: 0.85; font-size: 0.95rem; }
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 1rem; background: rgba(255,255,255,0.2);
+            border-radius: 50px; font-size: 0.8rem; margin-top: 1rem; backdrop-filter: blur(8px);
+        }
+
+        section { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+        }
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--accent);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+
+        /* 今日问题 */
+        .question-box {
+            background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(236,72,153,0.08));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .question-box .q-mark {
+            font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-right: 0.5rem;
+        }
+
+        /* 线索卡片 */
+        .clue-grid { display: flex; flex-direction: column; gap: 1rem; }
+        .clue-card {
+            background: var(--bg); border: 1px solid var(--border-light);
+            border-radius: 12px; padding: 1.2rem;
+            position: relative;
+        }
+        .clue-card::before {
+            content: '💡'; position: absolute; top: 1.2rem; left: 1.2rem;
+        }
+        .clue-card .clue-text {
+            padding-left: 2rem; font-size: 0.92rem; line-height: 1.8; color: var(--text-secondary);
+        }
+        .clue-card .clue-source {
+            padding-left: 2rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+        }
+
+        /* 思考任务 */
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex; align-items: flex-start; gap: 0.8rem;
+            padding: 1rem 0; border-bottom: 1px solid var(--border-light);
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-status {
+            width: 22px; height: 22px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 0.1rem; font-size: 0.75rem;
+        }
+        .task-status.todo { border: 2px solid var(--border); background: transparent; }
+        .task-status.done { background: var(--success); color: white; border: 2px solid var(--success); }
+        .task-content { flex: 1; }
+        .task-title { font-weight: 600; font-size: 0.9rem; }
+        .task-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.7; }
+        .task-hint {
+            background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px; padding: 0.6rem 0.8rem;
+            font-size: 0.78rem; color: var(--warning); margin-top: 0.5rem;
+        }
+
+        /* 我的视角 */
+        .perspective-box {
+            background: var(--bg); border-radius: 12px; padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+        .perspective-box .perspective-header {
+            font-size: 0.8rem; font-weight: 700; color: var(--accent);
+            margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .perspective-box .perspective-text {
+            font-size: 0.92rem; line-height: 1.9; color: var(--text-secondary);
+        }
+        .perspective-box .perspective-text p { margin-bottom: 0.8rem; }
+        .perspective-box .counter-arg {
+            background: rgba(239,68,68,0.05); border-left: 3px solid var(--danger);
+            padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
+            font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.8rem;
+        }
+
+        /* 思维导图 */
+        .mindmap-local {
+            background: var(--bg); border-radius: 12px; padding: 1rem; overflow-x: auto;
+        }
+
+        /* 测验区 */
+        .quiz-section {
+            background: linear-gradient(135deg, rgba(79,70,229,0.05), rgba(236,72,153,0.05));
+            border: 1px solid rgba(79,70,229,0.15);
+        }
+        .score-display {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.4rem 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            color: white; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+        }
+        .weak-tags {
+            display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;
+        }
+        .weak-tag {
+            padding: 0.2rem 0.6rem; background: rgba(245,158,11,0.1);
+            color: var(--warning); border-radius: 20px; font-size: 0.72rem;
+            border: 1px solid rgba(245,158,11,0.2);
+        }
+
+        /* 视频 */
+        .video-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .video-item {
+            display: flex; gap: 1rem; padding: 0.8rem; background: var(--bg);
+            border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.3s;
+        }
+        .video-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }
+        .video-thumb {
+            width: 100px; height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+        .video-info { flex: 1; }
+        .video-title { font-weight: 600; font-size: 0.85rem; }
+        .video-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        /* 导航 */
+        .nav-arrows {
+            display: flex; justify-content: space-between; margin-top: 2rem;
+        }
+        .nav-arrow {
+            padding: 0.6rem 1.2rem; border: 1px solid var(--border);
+            background: var(--surface); border-radius: 10px;
+            text-decoration: none; color: var(--text);
+            font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
+        }
+        .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-arrow.disabled { opacity: 0.4; pointer-events: none; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            section { padding: 2rem 1rem; }
+            .card { padding: 1.2rem; }
+            .video-item { flex-direction: column; }
+            .video-thumb { width: 100%; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="learning.html" class="nav-logo">← 返回学习主页</a>
+            <ul class="nav-links">
+                <li><a href="learning.html">学习主页</a></li>
+                <li><a href="index.html">简历</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-tag">DAY 3 · WEEK 1 · 01-A4</div>
+            <h1>准确率 vs 用户满意度，AI产品经理该追哪个？</h1>
+            <p>ChatGPT准确率不高但满意度极高——这合理吗？</p>
+            <div class="status-badge" id="statusBadge">
+                <span id="statusDot">⏳</span>
+                <span id="statusText">等待学习</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日问题 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎯 今日问题</div>
+            <div class="question-box">
+                <span class="q-mark">Q.</span>
+                你是一家AI产品团队的负责人，CTO说"先把准确率做到95%再说"，运营总监说"用户已经骂街了，先解决体验问题"。两个都有道理，但资源只够选一个。
+<br><br>
+                ChatGPT有时候胡说八道，准确率并不完美，但用户满意度极高——为什么？某医疗AI诊断准确率99%，但医生不敢用——又是为什么？
+<br><br>
+                <strong>AI产品的核心指标到底是什么？准确率重要还是用户满意度重要？还是说，这个问题本身就是错的？</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- 线索卡片 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">💡 线索卡片 · 我只给碎片，拼图你自己拼</div>
+            <div class="clue-grid">
+                <div class="clue-card">
+                    <div class="clue-text">
+                        ChatGPT刚上线时，OpenAI内部有个争论：要不要等模型准确率更高再开放给公众？最终决定先上线，因为团队发现用户其实在意的不是"答案对不对"，而是"对话流不流畅、有没有被理解的感觉"。一位产品经理的原话是："用户宁愿和一个聪明但偶尔犯错的朋友聊天，也不想和一个永远正确但冷冰冰的机器打交道。"
+                    </div>
+                    <div class="clue-source">来源：OpenAI 内部产品复盘访谈 · 2023年</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        某银行上线了一套AI客服系统，测试阶段准确率达到了95%，远超人工客服的85%。但上线一个月后，用户投诉量反而上升了40%。原因出乎意料：AI回答虽然准确，但语气生硬、不会道歉、不会安抚情绪。一个用户因为信用卡被盗刷，AI准确告知了挂失流程，但全程没有一句"我理解您很着急"——用户挂了电话就给了差评。
+                    </div>
+                    <div class="clue-source">来源：某国有银行 AI 客服项目复盘 · 2025年</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        Midjourney（AI绘画工具）早期生成的图片经常"多根手指"、"人脸扭曲"，准确率按传统标准来看很差。但用户疯狂传播，社区氛围极热。为什么？因为用户不是在用Midjourney"画准确的画"，是在用Midjourney"探索意外的惊喜"。产品定位不是"精确绘图工具"，是"创意发生器"——准确率在这个场景下不是核心指标。
+                    </div>
+                    <div class="clue-source">来源：Midjourney 社区早期用户行为分析 · 2022-2023</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        某三甲医院引入了一套AI辅助诊断系统，对肺癌的早期筛查准确率达到了97%。但用了三个月，医生们普遍不愿意打开这个系统。调查后发现：AI会在报告上标注"AI建议：高度怀疑恶性"，但没有解释为什么。医生不敢直接采信（怕误诊担责），也没有时间自己重看一遍片子（那要AI干嘛）。97%的准确率，变成了0%的使用率。
+                    </div>
+                    <div class="clue-source">来源：某三甲医院AI辅助诊断项目后评估 · 2024年</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 思考任务 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">✅ 思考任务 · 完成后在微信回复"我学习好了"</div>
+            <ul class="task-list">
+                <li class="task-item">
+                    <div class="task-status todo" id="task1-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务一：分类实战（15分钟）</div>
+                        <div class="task-desc">
+                            列出你手机里正在用的3个AI功能（比如语音助手、拍照美颜、推荐算法、智能输入法等）。<br>
+                            对每个产品回答：它是"准确率高但体验可能不够好"，还是"准确率不一定高但体验很好"？注意——有些产品两者都高，有些两者都低，写下来你的判断依据。
+                        </div>
+                        <div class="task-hint">💡 提示：不要查数据凭感觉。先判断，然后反问自己"我怎么知道这个产品的准确率是高还是低？"</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task2-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务二：制造矛盾（20分钟）</div>
+                        <div class="task-desc">
+                            从任务一里选一个你最"拿不准"的产品。写出两个论点——论点A认为团队应该先追准确率，论点B认为应该先追用户满意度。<strong>两个论点都要说得通。</strong><br>
+                            关键不是选边站，是让你意识到：同一个产品，在不同阶段、对不同用户，指标优先级可能完全不同。
+                        </div>
+                        <div class="task-hint">💡 提示：试着从不同角度切——是"产品阶段"（早期vs成熟期）？是"用户场景"（医疗vs娱乐）？是"容错成本"（出错了有多严重）？</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task3-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务三：一句话说服（15分钟）</div>
+                        <div class="task-desc">
+                            假设你是那个银行AI客服的产品经理，CTO坚持"准确率不到98%不能上线"，你需要说服他"95%就够了，先解决语气问题"。<strong>用一句话说服。</strong>这句话要让不懂技术的人听懂，而且要让他无法反驳。<br>
+                            写完读一遍——如果删掉这句话里任何一个词，意思都不完整，那就对了。
+                        </div>
+                        <div class="task-hint">💡 提示：好的说服不是争对错，是换一个维度让他意识到他原来的标准在这个场景下不适用。从"准确率"维度切到"用户留存"或"投诉成本"维度试试。</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 我的视角 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">👁️ 我的视角 · 这是我个人的看法，不是标准答案</div>
+            <div class="perspective-box">
+                <div class="perspective-header">🤔 我是这样想的...</div>
+                <div class="perspective-text">
+                    <p>我觉得"准确率重要还是用户满意度重要"这个问题本身就是个陷阱。不是二选一，是<strong>"在什么场景下，哪个指标是瓶颈"</strong>。</p>
+                    <p>ChatGPT 早期准确率低但满意度高，是因为它的场景（闲聊、创意写作）容错成本极低——说错了用户可以笑着纠正。医疗 AI 准确率 97% 但没人用，是因为场景容错成本极高——误诊一条人命。同一个"准确率"数字，在两个场景下的含义完全不同。</p>
+                    <p>我的框架是：<strong>先看容错成本，再定指标优先级。</strong>容错成本高的场景（医疗、金融、自动驾驶），准确率是门槛，没过门槛其他都免谈。容错成本低的场景（聊天、绘画、娱乐），用户满意度是核心，准确率可以后面慢慢追。</p>
+                    <p>但这里有个更狠的问题：银行 AI 客服的容错成本其实不高（挂失流程说错了最多多打一个电话），但用户满意度却极低——因为<strong>情感体验在人际交互场景中变成了隐性门槛</strong>。一个系统可以 95% 准确地完成业务流程，但 0% 地安抚用户情绪，最终结果仍然是投诉。</p>
+                </div>
+                <div class="counter-arg">
+                    <strong>但也有人会反驳我：</strong>如果按我的说法，所有 AI 产品都应该先问"容错成本高不高"，但产品经理在立项阶段根本没法精确预估容错成本。你怎么回应这个反驳？你的理由是什么？
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 知识图谱 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🧠 今日知识图谱</div>
+            <div class="mindmap-local">
+                <div class="mermaid">
+graph TD
+    A[AI产品核心指标] --> B[准确率]
+    A --> C[用户满意度]
+    A --> D[使用场景]
+    D --> D1[容错成本高<br/>医疗/金融/自动驾驶]
+    D --> D2[容错成本低<br/>聊天/绘画/娱乐]
+    D1 --> E1[准确率是门槛<br/>先过门槛再谈体验]
+    D2 --> E2[满意度优先<br/>准确率可后追]
+    B --> F[准确率97%<br/>但医生不敢用]
+    C --> G[满意度高<br/>但ChatGPT会胡说]
+    F --> H[原因：缺少可解释性<br/>医生不信任]
+    G --> I[原因：容错成本低<br/>用户愿意原谅]
+                </div>
+            </div>
+            <div id="mindmap-fallback" style="display:none; margin-top:1rem;">
+                <div style="background:var(--bg); border-radius:10px; padding:1.2rem; font-size:0.85rem; line-height:2; color:var(--text-secondary);">
+                    <div style="font-weight:700; color:var(--accent); margin-bottom:0.5rem;">AI产品指标权衡知识树（静态版）</div>
+                    <div>├─ 准确率</div>
+                    <div>├─ 用户满意度</div>
+                    <div>├─ 使用场景</div>
+                    <div>│  ├─ 容错成本高（医疗/金融/自动驾驶）</div>
+                    <div>│  │  └─ 准确率是门槛，先过门槛再谈体验</div>
+                    <div>│  └─ 容错成本低（聊天/绘画/娱乐）</div>
+                    <div>│     └─ 满意度优先，准确率可后追</div>
+                    <div>├─ 准确率97%但医生不敢用 → 缺少可解释性</div>
+                    <div>└─ 满意度高但ChatGPT会胡说 → 容错成本低</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 测验得分 -->
+    <section class="reveal">
+        <div class="card quiz-section">
+            <div class="section-label">🎯 微信思考测验</div>
+            <div id="quizResult">
+                <p style="color:var(--text-muted); font-size:0.9rem;">
+                    完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
+                    我会出三道开放题，没有标准答案，评估你的思考过程。
+                </p>
+            </div>
+            <div class="weak-tags" id="weakTags"></div>
+        </div>
+    </section>
+
+    <!-- 拓展视频 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎬 拓展资源</div>
+            <div class="video-list">
+                <a href="https://www.bilibili.com/read/cv39798465" target="_blank" class="video-item">
+                    <div class="video-thumb">📖</div>
+                    <div class="video-info">
+                        <div class="video-title">在大模型时代，我们如何有效的去学习/入门AI产品经理？</div>
+                        <div class="video-meta">B站专栏 · AI产品经理能力模型与评估指标详解</div>
+                    </div>
+                </a>
+                <a href="https://www.woshipm.com/ai/6363074.html" target="_blank" class="video-item">
+                    <div class="video-thumb">🔗</div>
+                    <div class="video-info">
+                        <div class="video-title">AI产品评估：准确率之外，产品经理还应该关注什么？</div>
+                        <div class="video-meta">人人都是产品经理 · 用户满意度与业务指标</div>
+                    </div>
+                </a>
+                <a href="https://www.bilibili.com/list/ml1538904134" target="_blank" class="video-item">
+                    <div class="video-thumb">▶</div>
+                    <div class="video-info">
+                        <div class="video-title">产品经理基础课程合集</div>
+                        <div class="video-meta">B站收藏夹 · 产品思维与数据分析</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 导航 -->
+    <section>
+        <div class="nav-arrows">
+            <a href="day-02.html" class="nav-arrow">← 前一天</a>
+            <a href="day-04.html" class="nav-arrow">后一天 →</a>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        (function() {
+            function loadScript(src, onload, onerror) {
+                var s = document.createElement('script');
+                s.src = src; s.onload = onload; s.onerror = onerror;
+                document.head.appendChild(s);
+            }
+            var cdns = [
+                'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
+                'https://unpkg.com/mermaid@10/dist/mermaid.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js'
+            ];
+            var fallbackTimer;
+            function showFallback() {
+                var fb = document.getElementById('mindmap-fallback');
+                if (fb) fb.style.display = 'block';
+                var mm = document.querySelector('.mermaid');
+                if (mm) mm.style.display = 'none';
+            }
+            function tryLoad(i) {
+                if (i >= cdns.length) { showFallback(); return; }
+                fallbackTimer = setTimeout(function() { showFallback(); }, 8000);
+                loadScript(cdns[i], function() {
+                    clearTimeout(fallbackTimer);
+                    if (typeof mermaid !== 'undefined') {
+                        mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }});
+                        mermaid.run({ querySelector: '.mermaid' }).then(function() {}).catch(function() { showFallback(); });
+                    } else { showFallback(); }
+                }, function() { clearTimeout(fallbackTimer); tryLoad(i + 1); });
+            }
+            tryLoad(0);
+        })();
+    </script>
+</body>
+</html>
