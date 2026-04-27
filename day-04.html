@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 4 · 技术万能论的陷阱：为什么AI硬件会集体翻车？ | 魏林桠的AI学习之旅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+            --text-secondary: #4a5568; --text-muted: #718096;
+            --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+            --border: #e2e8f0; --border-light: #edf2f7;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --thinking: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.8; overflow-x: hidden;
+        }
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s;
+        }
+        nav.scrolled {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+        }
+        .nav-inner { max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none; }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.8rem; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .hero {
+            min-height: 40vh; display: flex; align-items: center; justify-content: center;
+            padding-top: 80px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+            color: white; text-align: center;
+        }
+        .hero-content { max-width: 700px; padding: 0 2rem; }
+        .hero-tag { font-size: 0.75rem; opacity: 0.8; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+        .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: 0.6rem; }
+        .hero p { opacity: 0.85; font-size: 0.95rem; }
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 1rem; background: rgba(255,255,255,0.2);
+            border-radius: 50px; font-size: 0.8rem; margin-top: 1rem; backdrop-filter: blur(8px);
+        }
+
+        section { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+        }
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--accent);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+
+        .question-box {
+            background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(236,72,153,0.08));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .question-box .q-mark {
+            font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-right: 0.5rem;
+        }
+
+        .clue-grid { display: flex; flex-direction: column; gap: 1rem; }
+        .clue-card {
+            background: var(--bg); border: 1px solid var(--border-light);
+            border-radius: 12px; padding: 1.2rem;
+            position: relative;
+        }
+        .clue-card::before {
+            content: '💡'; position: absolute; top: 1.2rem; left: 1.2rem;
+        }
+        .clue-card .clue-text {
+            padding-left: 2rem; font-size: 0.92rem; line-height: 1.8; color: var(--text-secondary);
+        }
+        .clue-card .clue-source {
+            padding-left: 2rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+        }
+
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex; align-items: flex-start; gap: 0.8rem;
+            padding: 1rem 0; border-bottom: 1px solid var(--border-light);
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-status {
+            width: 22px; height: 22px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 0.1rem; font-size: 0.75rem;
+        }
+        .task-status.todo { border: 2px solid var(--border); background: transparent; }
+        .task-status.done { background: var(--success); color: white; border: 2px solid var(--success); }
+        .task-content { flex: 1; }
+        .task-title { font-weight: 600; font-size: 0.9rem; }
+        .task-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.7; }
+        .task-hint {
+            background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px; padding: 0.6rem 0.8rem;
+            font-size: 0.78rem; color: var(--warning); margin-top: 0.5rem;
+        }
+
+        .perspective-box {
+            background: var(--bg); border-radius: 12px; padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+        .perspective-box .perspective-header {
+            font-size: 0.8rem; font-weight: 700; color: var(--accent);
+            margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .perspective-box .perspective-text {
+            font-size: 0.92rem; line-height: 1.9; color: var(--text-secondary);
+        }
+        .perspective-box .perspective-text p { margin-bottom: 0.8rem; }
+        .perspective-box .counter-arg {
+            background: rgba(239,68,68,0.05); border-left: 3px solid var(--danger);
+            padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
+            font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.8rem;
+        }
+
+        .mindmap-local {
+            background: var(--bg); border-radius: 12px; padding: 1rem; overflow-x: auto;
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, rgba(79,70,229,0.05), rgba(236,72,153,0.05));
+            border: 1px solid rgba(79,70,229,0.15);
+        }
+        .score-display {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.4rem 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            color: white; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+        }
+        .weak-tags {
+            display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;
+        }
+        .weak-tag {
+            padding: 0.2rem 0.6rem; background: rgba(245,158,11,0.1);
+            color: var(--warning); border-radius: 20px; font-size: 0.72rem;
+            border: 1px solid rgba(245,158,11,0.2);
+        }
+
+        .video-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .video-item {
+            display: flex; gap: 1rem; padding: 0.8rem; background: var(--bg);
+            border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.3s;
+        }
+        .video-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }
+        .video-thumb {
+            width: 100px; height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+        .video-info { flex: 1; }
+        .video-title { font-weight: 600; font-size: 0.85rem; }
+        .video-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        .nav-arrows {
+            display: flex; justify-content: space-between; margin-top: 2rem;
+        }
+        .nav-arrow {
+            padding: 0.6rem 1.2rem; border: 1px solid var(--border);
+            background: var(--surface); border-radius: 10px;
+            text-decoration: none; color: var(--text);
+            font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
+        }
+        .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-arrow.disabled { opacity: 0.4; pointer-events: none; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            section { padding: 2rem 1rem; }
+            .card { padding: 1.2rem; }
+            .video-item { flex-direction: column; }
+            .video-thumb { width: 100%; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="learning.html" class="nav-logo">← 返回学习主页</a>
+            <ul class="nav-links">
+                <li><a href="learning.html">学习主页</a></li>
+                <li><a href="index.html">简历</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-tag">DAY 4 · WEEK 1 · 01-A5</div>
+            <h1>技术万能论的陷阱：为什么AI硬件会集体翻车？</h1>
+            <p>前苹果设计师做的AI Pin，技术很酷但退货率超过50%——问题出在哪？</p>
+            <div class="status-badge" id="statusBadge">
+                <span id="statusDot">⏳</span>
+                <span id="statusText">等待学习</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日问题 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎯 今日问题</div>
+            <div class="question-box">
+                <span class="q-mark">Q.</span>
+                2024年，两个AI硬件横空出世——Humane AI Pin（前苹果团队，2.4亿美元投资）和Rabbit R1（CES爆款，10万台预售）。它们都号称要"重新定义人机交互"，技术概念极其超前。结果：AI Pin退货率超过50%，Rabbit R1日活只剩5000人。
+<br><br>
+                但与此同时，看起来"没什么技术含量"的Ray-Ban Meta智能眼镜（就是在普通墨镜上加了个摄像头和扬声器）却卖得很好，用户日均佩戴7小时以上。
+<br><br>
+                <strong>技术越强的产品反而死得越快，技术越普通的产品反而活得越好——这是为什么？AI产品经理该怎么判断"技术炫技"和"用户真需要"之间的界限？</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- 线索卡片 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">💡 线索卡片 · 我只给碎片，拼图你自己拼</div>
+            <div class="clue-grid">
+                <div class="clue-card">
+                    <div class="clue-text">
+                        AI Pin的团队由前苹果软件工程总监和前苹果设计师领衔，技术极其激进：没有屏幕，用激光投影把信息显示在手掌上，所有交互靠语音和手势。但产品发售后，用户发现响应时间长达5-10秒，续航只有2-4小时，夏天还会过热。一位科技评论人直言："这更像是一个工程师的意淫产品，有足够的前卫理念，但真的不实用。"
+                    </div>
+                    <div class="clue-source">来源：The Verge、36氪 · 2024年评测</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        Rabbit R1号称能用"大型动作模型"帮用户打车、点外卖、买机票。但用户到手后发现：这些功能手机都能做，而且手机做得更好。一位投资人的评价很扎心："Rabbit R1解决的问题，是手机今天都能解决的。做AI硬件时一定要想明白一个问题——跟手机的关系是什么？"
+                    </div>
+                    <div class="clue-source">来源：科技行业投资人访谈 · 2024年</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        Ray-Ban Meta初代（2021年）卖得并不好——30万副销量，月活只有27000人。但2023年的二代产品只做了一件事：大幅优化音频体验，把续航提升到4-6小时，价格保持299美元不变。二代大获成功。为什么？因为用户买它的核心理由不是"AI功能"，是"这首先是一副好墨镜"——能拍照、能听音乐是加分项，但前提得先是一副愿意戴出门的墨镜。
+                    </div>
+                    <div class="clue-source">来源：华尔街日报、蜂巢科技用户调研 · 2023-2024</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        一位做了20年消费电子的产品老兵说了一句话，被业内广泛引用："在智能硬件和AI硬件未来发展上，对交互方式的根本性变革要非常重视和严谨。不能轻视消费者使用习惯和行为门槛，这远大于技术投入的门槛。即使砸几百亿美金，也拿不下市场。"
+                    </div>
+                    <div class="clue-source">来源：消费电子行业老兵访谈 · 2024年</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 思考任务 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">✅ 思考任务 · 完成后在微信回复"我学习好了"</div>
+            <ul class="task-list">
+                <li class="task-item">
+                    <div class="task-status todo" id="task1-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务一：观察层——找反差（15分钟）</div>
+                        <div class="task-desc">
+                            AI Pin和Rabbit R1都死了，Ray-Ban Meta活了。用你自己的话描述这三个产品的关键差异——不要谈技术参数，谈"用户拿到手之后，每天会怎么用它"。<br>
+                            比如：Ray-Ban Meta用户每天戴着它出门，因为____；AI Pin用户戴了三天就扔抽屉里了，因为____。
+                        </div>
+                        <div class="task-hint">💡 提示：从"使用场景"和"使用频率"入手，不是"功能多不多"。</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task2-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务二：分析层——制造矛盾（20分钟）</div>
+                        <div class="task-desc">
+                            有人跟你说："AI Pin的失败是因为技术还不够成熟，等激光投影和续航技术突破了，它一定会成功。"<br><br>
+                            你反对他。写出两个论点——论点A支持"技术成熟就能成功"，论点B支持"技术再成熟也没用，问题不在技术"。两个都要说得通。<br>
+                            关键是：如果你选论点B，你的理由不能是"用户不需要"这种泛泛的，要具体说明"用户到底需要什么，而AI Pin给不了"。
+                        </div>
+                        <div class="task-hint">💡 提示：试着从"替代成本"角度想——用户已经有手机了，AI Pin要取代手机的哪个功能？这个功能用户愿意放弃手机体验来换吗？</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task3-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务三：验证层——一句话说清（15分钟）</div>
+                        <div class="task-desc">
+                            假设你在面试，面试官问你："你怎么判断一个AI产品是不是'伪需求'？"<br>
+                            用一句话回答。这句话要让面试官觉得你有工业设计背景的优势——不是纯技术视角，是"用户会怎么用"的视角。<br>
+                            写完读一遍，如果删掉任何一个词意思就不完整，那就对了。
+                        </div>
+                        <div class="task-hint">💡 提示：结合你工业设计的专业背景。设计师怎么判断一个产品有没有真实需求？是用户调研？是场景观察？是原型测试？把这个思路用一句话表达出来。</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 我的视角 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">👁️ 我的视角 · 这是我个人的看法，不是标准答案</div>
+            <div class="perspective-box">
+                <div class="perspective-header">🤔 我是这样想的...</div>
+                <div class="perspective-text">
+                    <p>我觉得AI Pin和Rabbit R1的失败，根子不是技术不成熟，是<strong>"产品定位反了"</strong>。</p>
+                    <p>它们的逻辑是"我有很酷的AI技术，用户一定需要"。Ray-Ban Meta的逻辑是"用户需要一副好墨镜，AI是锦上添花"。前者从技术出发找需求，后者从需求出发配技术——方向相反，结果相反。</p>
+                    <p>工业设计师最懂这个。你设计一把椅子，不会先想"我要用碳纤维还是钛合金"，你会先想"人坐上去的时候，腰背怎么受力、腿怎么放、坐久了累不累"。材料是后话。</p>
+                    <p>AI产品经理也是一样的。AI Pin的团队全是苹果出来的顶级工程师，但他们设计产品的起点是"激光投影能做什么"，不是"用户走在路上的时候，最方便获取信息的方式是什么"。技术越牛，越容易陷进这个坑——因为你会忍不住把技术炫出来，而不是藏起来。</p>
+                </div>
+                <div class="counter-arg">
+                    <strong>但也有人会反驳我：</strong>如果按我的说法，所有革命性产品一开始都是"伪需求"——智能手机刚出来的时候也被说"有电脑就够了"，触摸屏也被说"不如物理键盘好用"。怎么区分"真需求的早期阶段"和"纯伪需求"？你的判断标准是什么？
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 知识图谱 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🧠 今日知识图谱</div>
+            <div class="mindmap-local">
+                <div class="mermaid">
+graph TD
+    A[技术万能论陷阱] --> B[技术驱动型产品]
+    A --> C[需求驱动型产品]
+    B --> B1[AI Pin：激光投影+手势]
+    B --> B2[Rabbit R1：AI操作APP]
+    B1 --> B1r[退货率>50%]
+    B2 --> B2r[日活5000]
+    C --> C1[Ray-Ban Meta：先做好墨镜]
+    C1 --> C1r[日均佩戴7小时]
+    B --> D[共同问题：用户已有手机]
+    D --> E[替代成本过高]
+    E --> F[失败原因：不是技术差，是需求不存在]
+    C --> G[成功原因：AI是加分项，不是必需品]
+    G --> H[核心原则：先做好产品，再叠加AI]
+                </div>
+            </div>
+            <div id="mindmap-fallback" style="display:none; margin-top:1rem;">
+                <div style="background:var(--bg); border-radius:10px; padding:1.2rem; font-size:0.85rem; line-height:2; color:var(--text-secondary);">
+                    <div style="font-weight:700; color:var(--accent); margin-bottom:0.5rem;">技术万能论陷阱知识树（静态版）</div>
+                    <div>├─ 技术驱动型产品</div>
+                    <div>│  ├─ AI Pin：激光投影+手势交互 → 退货率>50%</div>
+                    <div>│  ├─ Rabbit R1：AI操作APP → 日活仅5000</div>
+                    <div>│  └─ 共同问题：用户已有手机，替代成本过高</div>
+                    <div>├─ 需求驱动型产品</div>
+                    <div>│  └─ Ray-Ban Meta：先做好墨镜 → 日均佩戴7小时</div>
+                    <div>│     └─ AI是加分项，不是必需品</div>
+                    <div>└─ 核心原则：先做好产品，再叠加AI</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 测验得分 -->
+    <section class="reveal">
+        <div class="card quiz-section">
+            <div class="section-label">🎯 微信思考测验</div>
+            <div id="quizResult">
+                <p style="color:var(--text-muted); font-size:0.9rem;">
+                    完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
+                    我会出三道开放题，没有标准答案，评估你的思考过程。
+                </p>
+            </div>
+            <div class="weak-tags" id="weakTags"></div>
+        </div>
+    </section>
+
+    <!-- 拓展视频 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎬 拓展资源</div>
+            <div class="video-list">
+                <a href="https://www.bilibili.com/read/cv39798465" target="_blank" class="video-item">
+                    <div class="video-thumb">📖</div>
+                    <div class="video-info">
+                        <div class="video-title">在大模型时代，我们如何有效的去学习/入门AI产品经理？</div>
+                        <div class="video-meta">B站专栏 · AI产品经理能力模型</div>
+                    </div>
+                </a>
+                <a href="https://www.36kr.com/p/3380081710655237" target="_blank" class="video-item">
+                    <div class="video-thumb">🔗</div>
+                    <div class="video-info">
+                        <div class="video-title">第一批AI硬件已经死了</div>
+                        <div class="video-meta">36氪 · AI硬件失败案例分析</div>
+                    </div>
+                </a>
+                <a href="https://www.bilibili.com/list/ml1538904134" target="_blank" class="video-item">
+                    <div class="video-thumb">▶</div>
+                    <div class="video-info">
+                        <div class="video-title">产品经理基础课程合集</div>
+                        <div class="video-meta">B站收藏夹 · 产品思维与需求分析</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 导航 -->
+    <section>
+        <div class="nav-arrows">
+            <a href="day-03.html" class="nav-arrow">← 前一天</a>
+            <a href="day-05.html" class="nav-arrow">后一天 →</a>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        (function() {
+            function loadScript(src, onload, onerror) {
+                var s = document.createElement('script');
+                s.src = src; s.onload = onload; s.onerror = onerror;
+                document.head.appendChild(s);
+            }
+            var cdns = [
+                'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
+                'https://unpkg.com/mermaid@10/dist/mermaid.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js'
+            ];
+            var fallbackTimer;
+            function showFallback() {
+                var fb = document.getElementById('mindmap-fallback');
+                if (fb) fb.style.display = 'block';
+                var mm = document.querySelector('.mermaid');
+                if (mm) mm.style.display = 'none';
+            }
+            function tryLoad(i) {
+                if (i >= cdns.length) { showFallback(); return; }
+                fallbackTimer = setTimeout(function() { showFallback(); }, 8000);
+                loadScript(cdns[i], function() {
+                    clearTimeout(fallbackTimer);
+                    if (typeof mermaid !== 'undefined') {
+                        mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }});
+                        mermaid.run({ querySelector: '.mermaid' }).then(function() {}).catch(function() { showFallback(); });
+                    } else { showFallback(); }
+                }, function() { clearTimeout(fallbackTimer); tryLoad(i + 1); });
+            }
+            tryLoad(0);
+        })();
+    </script>
+</body>
+</html>
