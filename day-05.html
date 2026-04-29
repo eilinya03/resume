@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 5 · 数据万能论的陷阱：为什么模型95%准确率，用户还是放弃了？ | 魏林桠的AI学习之旅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+            --text-secondary: #4a5568; --text-muted: #718096;
+            --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+            --border: #e2e8f0; --border-light: #edf2f7;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --thinking: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.8; overflow-x: hidden;
+        }
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s;
+        }
+        nav.scrolled {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+        }
+        .nav-inner { max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none; }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.8rem; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .hero {
+            min-height: 40vh; display: flex; align-items: center; justify-content: center;
+            padding-top: 80px;
+            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+            color: white; text-align: center;
+        }
+        .hero-content { max-width: 700px; padding: 0 2rem; }
+        .hero-tag { font-size: 0.75rem; opacity: 0.8; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+        .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: 0.6rem; }
+        .hero p { opacity: 0.85; font-size: 0.95rem; }
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 1rem; background: rgba(255,255,255,0.2);
+            border-radius: 50px; font-size: 0.8rem; margin-top: 1rem; backdrop-filter: blur(8px);
+        }
+
+        section { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+        }
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--accent);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+
+        .question-box {
+            background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(236,72,153,0.08));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .question-box .q-mark {
+            font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-right: 0.5rem;
+        }
+
+        .clue-grid { display: flex; flex-direction: column; gap: 1rem; }
+        .clue-card {
+            background: var(--bg); border: 1px solid var(--border-light);
+            border-radius: 12px; padding: 1.2rem;
+            position: relative;
+        }
+        .clue-card::before {
+            content: '💡'; position: absolute; top: 1.2rem; left: 1.2rem;
+        }
+        .clue-card .clue-text {
+            padding-left: 2rem; font-size: 0.92rem; line-height: 1.8; color: var(--text-secondary);
+        }
+        .clue-card .clue-source {
+            padding-left: 2rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+        }
+
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex; align-items: flex-start; gap: 0.8rem;
+            padding: 1rem 0; border-bottom: 1px solid var(--border-light);
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-status {
+            width: 22px; height: 22px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 0.1rem; font-size: 0.75rem;
+        }
+        .task-status.todo { border: 2px solid var(--border); background: transparent; }
+        .task-status.done { background: var(--success); color: white; border: 2px solid var(--success); }
+        .task-content { flex: 1; }
+        .task-title { font-weight: 600; font-size: 0.9rem; }
+        .task-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.7; }
+        .task-hint {
+            background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px; padding: 0.6rem 0.8rem;
+            font-size: 0.78rem; color: var(--warning); margin-top: 0.5rem;
+        }
+
+        .perspective-box {
+            background: var(--bg); border-radius: 12px; padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+        .perspective-box .perspective-header {
+            font-size: 0.8rem; font-weight: 700; color: var(--accent);
+            margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .perspective-box .perspective-text {
+            font-size: 0.92rem; line-height: 1.9; color: var(--text-secondary);
+        }
+        .perspective-box .perspective-text p { margin-bottom: 0.8rem; }
+        .perspective-box .counter-arg {
+            background: rgba(239,68,68,0.05); border-left: 3px solid var(--danger);
+            padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
+            font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.8rem;
+        }
+
+        .mindmap-local {
+            background: var(--bg); border-radius: 12px; padding: 1rem; overflow-x: auto;
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, rgba(79,70,229,0.05), rgba(236,72,153,0.05));
+            border: 1px solid rgba(79,70,229,0.15);
+        }
+        .score-display {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.4rem 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            color: white; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+        }
+        .weak-tags {
+            display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;
+        }
+        .weak-tag {
+            padding: 0.2rem 0.6rem; background: rgba(245,158,11,0.1);
+            color: var(--warning); border-radius: 20px; font-size: 0.72rem;
+            border: 1px solid rgba(245,158,11,0.2);
+        }
+
+        .video-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .video-item {
+            display: flex; gap: 1rem; padding: 0.8rem; background: var(--bg);
+            border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.3s;
+        }
+        .video-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }
+        .video-thumb {
+            width: 100px; height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+        .video-info { flex: 1; }
+        .video-title { font-weight: 600; font-size: 0.85rem; }
+        .video-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        .nav-arrows {
+            display: flex; justify-content: space-between; margin-top: 2rem;
+        }
+        .nav-arrow {
+            padding: 0.6rem 1.2rem; border: 1px solid var(--border);
+            background: var(--surface); border-radius: 10px;
+            text-decoration: none; color: var(--text);
+            font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
+        }
+        .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-arrow.disabled { opacity: 0.4; pointer-events: none; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            section { padding: 2rem 1rem; }
+            .card { padding: 1.2rem; }
+            .video-item { flex-direction: column; }
+            .video-thumb { width: 100%; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="learning.html" class="nav-logo">← 返回学习主页</a>
+            <ul class="nav-links">
+                <li><a href="learning.html">学习主页</a></li>
+                <li><a href="index.html">简历</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-tag">DAY 5 · WEEK 2 · 01-A5 + 弱项复现</div>
+            <h1>数据万能论的陷阱：为什么模型95%准确率，用户还是放弃了？</h1>
+            <p>模型指标很漂亮，但用户说"不用了"——问题出在哪？</p>
+            <div class="status-badge" id="statusBadge">
+                <span id="statusDot">⏳</span>
+                <span id="statusText">等待学习</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日问题 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎯 今日问题</div>
+            <div class="question-box">
+                <span class="q-mark">Q.</span>
+                某安全厂商的 AI 威胁检测系统上线后，模型指标极其漂亮：检出率 95%、准确率 95%、误报率从 40% 降到 5%。算法团队开香槟庆祝。
+<br><br>
+                三个月后，客户安全运营中心（SOC）的团队说："我们不用了。"<br><br>
+                为什么？因为系统每天仍然产生 100 条告警，SOC 分析师每天要花 4 小时处理——虽然比之前的 3000 条好，但还是处理不完。更关键的是，分析师们无法判断这 100 条里哪条是真的威胁、哪条是误报，每一条都要人工复核。
+<br><br>
+                <strong>模型准确率 95%，但用户放弃了。这说明"准确率"这个指标出了什么问题？产品经理应该关注什么指标？</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- 线索卡片 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">💡 线索卡片 · 我只给碎片，拼图你自己拼</div>
+            <div class="clue-grid">
+                <div class="clue-card">
+                    <div class="clue-text">
+                        Gartner 数据显示，平均每个 SOC 团队每天收到 11000+ 条告警，其中 99% 是误报。Ponemon Institute 调研发现，SOC 分析师每天花费 25% 的时间处理误报，导致"告警疲劳"（Alert Fatigue）。国内问卷显示，约 75% 企业把"告警疲劳"列为采用 AI 安全的首要驱动力。
+                    </div>
+                    <div class="clue-source">来源：Gartner 2023、Ponemon Institute 2022、国内厂商问卷汇总</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        一家互联网公司的 AI 降噪系统，SaaS 版降噪率可达 99%——10 万条告警降到 100 条。但私有化部署后，降噪率只有 80%——因为客户环境不同，模型泛化能力差。客户反馈："你们 demo 的时候效果很好，到我们这就废了。"
+                    </div>
+                    <div class="clue-source">来源：知道创宇实测数据 · 2024年</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        某厂商把 AI 安全模型的准确率从 86% 提升到 95%，花了 6 个月、投入了 200 万标注成本。但客户说："95% 和 86% 对我来说没区别——反正每一条我都要看。"真正的问题不是准确率不够高，是"用户不知道怎么用 AI 的结论做决策"。
+                    </div>
+                    <div class="clue-source">来源：国内金融客户反馈 · 2024年</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        安全场景对 AI 幻觉的容错率极低——误封正常业务或漏过真实威胁都是不可接受的。主流应对策略是"规则引擎+大模型"混合架构：规则过滤 90% 确定性场景（幻觉率为 0），大模型只处理 10% 复杂场景。这说明：在某些场景下，AI 准确率再高也不够，必须引入"确定性保障"。
+                    </div>
+                    <div class="clue-source">来源：炼石网络、悬镜安全 · 2024年</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 思考任务 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">✅ 思考任务 · 完成后在微信回复"我学习好了"</div>
+            <ul class="task-list">
+                <li class="task-item">
+                    <div class="task-status todo" id="task1-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务一：效果评估维度拆分（15分钟）</div>
+                        <div class="task-desc">
+                            "准确率 95%"这个数字，到底评估了什么？它没评估什么？<br>
+                            列出至少 3 个"准确率 95%"没覆盖的维度——这些维度可能才是用户放弃的真正原因。不要查资料，凭你对线索的理解拆分。
+                        </div>
+                        <div class="task-hint">💡 提示：想一想，SOC 分析师每天的工作流是什么？他打开系统后，第一步做什么？准确率 95% 能帮他减少哪一步的工作量？不能减少哪一步？</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task2-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务二：制造矛盾（20分钟）</div>
+                        <div class="task-desc">
+                            算法工程师说："我们的模型已经是业界 SOTA 了，客户不用是他们的损失。"<br><br>
+                            你是产品经理，要反驳他。但反驳不能是"用户体验很重要"这种正确的废话。<br>
+                            用<strong>具体的数字和场景</strong>反驳他。比如：准确率 95% 意味着每 20 条告警里有 1 条误报——对 SOC 分析师来说意味着什么？
+                        </div>
+                        <div class="task-hint">💡 提示：从"工作流时间成本"和"决策心理"两个角度想。分析师处理一条告警需要几分钟？准确率 95% 意味着他每天还要花多少时间处理误报？</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task3-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务三：一句话说清（15分钟）</div>
+                        <div class="task-desc">
+                            面试官问你："AI 产品怎么评估效果？准确率不够怎么办？"<br>
+                            用一句话回答。这句话要体现你的设计思维背景——不是"加更多数据训练"，是"从用户工作流重新设计指标"。<br>
+                            写完读一遍，删掉任何一个词意思就不完整，就对了。
+                        </div>
+                        <div class="task-hint">💡 提示：你学过工业设计，知道"设计不是好看，是解决问题"。同理，"指标不是高，是帮用户解决问题"。把这句话用面试语言说出来。</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 我的视角 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">👁️ 我的视角 · 这是我个人的看法，不是标准答案</div>
+            <div class="perspective-box">
+                <div class="perspective-header">🤔 我是这样想的...</div>
+                <div class="perspective-text">
+                    <p>我觉得"准确率 95% 但用户放弃"的核心问题是：<strong>产品经理和算法工程师评估的是"模型表现"，用户评估的是"我的工作有没有变轻松"。</strong>两个维度完全不同。</p>
+                    <p>模型准确率评估的是"AI 能不能正确识别威胁"，但 SOC 分析师的工作流是：收到告警 → 打开详情 → 判断真假 → 决定处置 → 写报告 → 关闭工单。准确率 95% 帮他减少了"判断真假"这一步的复杂度，但没减少"收到告警→打开详情→写报告→关闭工单"这些步骤。</p>
+                    <p>如果每天仍然收到 100 条告警，分析师的工作时间只减少了 20%——而不是从 8 小时降到 1 小时。他感知到的不是"AI 帮我省了时间"，是"我还是很累"。</p>
+                    <p>工业设计师最懂这个。你设计一个工具，不能只看"这个工具本身好不好用"，要看"用户用了这个工具之后，整个流程有没有变短"。AI 产品经理也是一样——AI 是流程中的一个环节，不是全部。</p>
+                </div>
+                <div class="counter-arg">
+                    <strong>但也有人会反驳我：</strong>"你说得对，但有些场景准确率就是生命线——医疗 AI 误诊就是人命，自动驾驶误判就是车祸。在这些场景下，准确率 99% 和 99.9% 的差距是巨大的。你的'工作流视角'在这些场景还成立吗？"
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 知识图谱 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🧠 今日知识图谱</div>
+            <div class="mindmap-local">
+                <div class="mermaid">
+graph TD
+    A[数据万能论陷阱] --> B[模型指标 vs 用户感知]
+    B --> B1[准确率95%：模型优秀]
+    B --> B2[用户放弃：工作流未减负]
+    B1 --> C[评估维度缺失]
+    C --> C1[工作流时间成本]
+    C --> C2[决策心理负担]
+    C --> C3[告警疲劳]
+    C --> C4[确定性保障需求]
+    B2 --> D[正确指标]
+    D --> D1[日均处理时间]
+    D --> D2[单条告警决策时间]
+    D --> D3[误报导致的心理信任损耗]
+    D --> D4[用户感知减负程度]
+    E[关键洞察] --> E1[AI是流程环节，不是全部]
+    E --> E2[指标高≠用户爽]
+    E --> E3[设计思维：评估整个流程]
+                </div>
+            </div>
+            <div id="mindmap-fallback" style="display:none; margin-top:1rem;">
+                <div style="background:var(--bg); border-radius:10px; padding:1.2rem; font-size:0.85rem; line-height:2; color:var(--text-secondary);">
+                    <div style="font-weight:700; color:var(--accent); margin-bottom:0.5rem;">数据万能论陷阱知识树（静态版）</div>
+                    <div>├─ 模型指标 vs 用户感知</div>
+                    <div>│  ├─ 准确率95%：模型表现优秀</div>
+                    <div>│  ├─ 用户放弃：工作流未真正减负</div>
+                    <div>│  └─ 核心问题：评估维度不同</div>
+                    <div>├─ 准确率没覆盖的维度</div>
+                    <div>│  ├─ 工作流时间成本</div>
+                    <div>│  ├─ 决策心理负担</div>
+                    <div>│  ├─ 告警疲劳</div>
+                    <div>│  └─ 确定性保障需求</div>
+                    <div>├─ 正确指标方向</div>
+                    <div>│  ├─ 日均处理时间</div>
+                    <div>│  ├─ 单条告警决策时间</div>
+                    <div>│  └─ 用户感知减负程度</div>
+                    <div>└─ 核心洞察：AI是流程环节，指标高≠用户爽</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 测验得分 -->
+    <section class="reveal">
+        <div class="card quiz-section">
+            <div class="section-label">🎯 微信思考测验</div>
+            <div id="quizResult">
+                <p style="color:var(--text-muted); font-size:0.9rem;">
+                    完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
+                    我会出三道开放题，没有标准答案，评估你的思考过程。
+                </p>
+            </div>
+            <div class="weak-tags" id="weakTags"></div>
+        </div>
+    </section>
+
+    <!-- 拓展视频 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎬 拓展资源</div>
+            <div class="video-list">
+                <a href="https://www.bilibili.com/read/cv39798465" target="_blank" class="video-item">
+                    <div class="video-thumb">📖</div>
+                    <div class="video-info">
+                        <div class="video-title">在大模型时代，我们如何有效的去学习/入门AI产品经理？</div>
+                        <div class="video-meta">B站专栏 · AI产品经理能力模型</div>
+                    </div>
+                </a>
+                <a href="https://www.woshipm.com/ai/6363074.html" target="_blank" class="video-item">
+                    <div class="video-thumb">🔗</div>
+                    <div class="video-info">
+                        <div class="video-title">AI产品评估：准确率之外，产品经理还应该关注什么？</div>
+                        <div class="video-meta">人人都是产品经理 · 效果评估维度详解</div>
+                    </div>
+                </a>
+                <a href="https://www.bilibili.com/list/ml1538904134" target="_blank" class="video-item">
+                    <div class="video-thumb">▶</div>
+                    <div class="video-info">
+                        <div class="video-title">产品经理基础课程合集</div>
+                        <div class="video-meta">B站收藏夹 · 数据思维与指标设计</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 导航 -->
+    <section>
+        <div class="nav-arrows">
+            <a href="day-04.html" class="nav-arrow">← 前一天</a>
+            <a href="day-06.html" class="nav-arrow">后一天 →</a>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        (function() {
+            function loadScript(src, onload, onerror) {
+                var s = document.createElement('script');
+                s.src = src; s.onload = onload; s.onerror = onerror;
+                document.head.appendChild(s);
+            }
+            var cdns = [
+                'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
+                'https://unpkg.com/mermaid@10/dist/mermaid.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js'
+            ];
+            var fallbackTimer;
+            function showFallback() {
+                var fb = document.getElementById('mindmap-fallback');
+                if (fb) fb.style.display = 'block';
+                var mm = document.querySelector('.mermaid');
+                if (mm) mm.style.display = 'none';
+            }
+            function tryLoad(i) {
+                if (i >= cdns.length) { showFallback(); return; }
+                fallbackTimer = setTimeout(function() { showFallback(); }, 8000);
+                loadScript(cdns[i], function() {
+                    clearTimeout(fallbackTimer);
+                    if (typeof mermaid !== 'undefined') {
+                        mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }});
+                        mermaid.run({ querySelector: '.mermaid' }).then(function() {}).catch(function() { showFallback(); });
+                    } else { showFallback(); }
+                }, function() { clearTimeout(fallbackTimer); tryLoad(i + 1); });
+            }
+            tryLoad(0);
+        })();
+    </script>
+</body>
+</html>
