@@ -330,12 +330,16 @@
         <div class="card quiz-section">
             <div class="section-label">🎯 微信思考测验</div>
             <div id="quizResult">
-                <p style="color:var(--text-muted); font-size:0.9rem;">
+                <span class="score-display">思考讨论 21/30</span>
+                <p style="margin-top:0.8rem; color:var(--text-muted); font-size:0.9rem;">
                     完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
                     我会出三道开放题，没有标准答案，评估你的思考过程。
                 </p>
             </div>
-            <div class="weak-tags" id="weakTags"></div>
+            <div class="weak-tags" id="weakTags">
+                <span class="weak-tag">任务三信息压缩不够锋利（"正向要求"表述模糊）</span>
+                <span class="weak-tag">面试一句话的信息密度可再提升</span>
+            </div>
         </div>
     </section>
 
@@ -366,6 +370,46 @@
                     </div>
                 </a>
             </div>
+        </div>
+    </section>
+
+    <!-- 追加讨论复盘 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">📎 追加讨论复盘 · Day 7 微信思考讨论全记录</div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务一：改写"请回答用户的问题"</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：04:49</p>
+                <p>用户回答："你是快餐店的智能官方客服，回答问题的时候只能围绕店铺地址、优惠券使用，营业时间，优惠券使用规则，会员福利，套餐优惠这几个方面回答，超出回答范围就不用回答，道歉明说自己回答不了就可以，遇到优惠券使用问题，先算出用户点餐价格，结合优惠券使用门槛计算出能否使用。"</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> 身份明确（快餐店官方客服），边界清晰（6个可回答领域），约束到位（超出范围道歉说明），方法具体（优惠券三步：算总价→对比门槛→告知结果）。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 优化点</strong> "优惠券使用"和"优惠券使用规则"重复，可合并；步骤可写成"按以下三步思考"让 AI 更听话。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务二：Few-shot 示例设计</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：04:54</p>
+                <p>用户示例：<br/>
+                1. "离我最近的店在哪里" → 门店查询<br/>
+                2. "50元预算两个人能否吃饱" → 价格咨询<br/>
+                3. "满50减5优惠券是否可以叠加三件8折优惠" → 优惠券咨询<br/>
+                4. "今天出餐不稳点太咸了，差评" → 投诉</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> 4个示例覆盖4种分类，有代表性；"投诉"示例是情绪类，覆盖了非信息性问题。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 优化点</strong> "优惠券咨询"示例偏复杂（叠加问题），作为教学示例不够"典型"；简单示例（如"满50减10的券怎么用"）更容易让 AI 学会规律。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务三：一句话面试题</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：05:04</p>
+                <p>初版（列表）：明确角色，增加正向描述，点名任务，增加背景细节，添加示例。</p>
+                <p>修正版（一句话）："设计prompt要先明确AI角色、补充正向要求、点明核心任务、加足背景细节、配上参考示例，让AI精准贴合需求输出结果。"</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> 从列表压缩成句子的过程体现了信息压缩能力；包含5个要素，结构完整。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 优化点</strong> "补充正向要求"表述模糊（什么是"正向"？），"加足背景细节"偏口语化；面试一句话的信息密度可再提升——比如"Prompt 是给 AI 的隐形员工手册：定身份、画边界、教方法，用户看不到它，但它决定了 AI 是聪明还是愚蠢。"</p>
+            </div>
+            
+            <p style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border-light);">
+                <strong>📌 本次思考讨论评分：21/30</strong> · 平均分 17.86/30（七天）
+            </p>
         </div>
     </section>
 
