@@ -328,12 +328,17 @@
         <div class="card quiz-section">
             <div class="section-label">🎯 微信思考测验</div>
             <div id="quizResult">
-                <p style="color:var(--text-muted); font-size:0.9rem;">
+                <span class="score-display">思考讨论 21/30</span>
+                <p style="margin-top:0.8rem; color:var(--text-muted); font-size:0.9rem;">
                     完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
                     我会出三道开放题，没有标准答案，评估你的思考过程。
                 </p>
             </div>
-            <div class="weak-tags" id="weakTags"></div>
+            <div class="weak-tags" id="weakTags">
+                <span class="weak-tag">任务三"WiFi连接"归类偏差（应为操作步骤非FAQ）</span>
+                <span class="weak-tag">分块粒度需从"按章节"进化到"按用户问题"</span>
+                <span class="weak-tag">任务二D场景核心原因未点出（推理判断vs信息查找）</span>
+            </div>
         </div>
     </section>
 
@@ -364,6 +369,44 @@
                     </div>
                 </a>
             </div>
+        </div>
+    </section>
+
+    <!-- 追加讨论复盘 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">📎 追加讨论复盘 · Day 8 微信思考讨论全记录</div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务一：一句话解释 RAG</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：05:17</p>
+                <p>用户回答："rag就相当于开卷考试，遇到一些没学习的问题，可以通过学习资料里面给的信息回答，如果学习资料里面没有这个问题，他就回答不出来。"</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> "开卷考试"类比精准——从闭卷考变成开卷考，核心机制（先查资料再回答）完全正确。"回答不出来"体现了 RAG 的可控性。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 可提升</strong> 可补上"语义检索"——RAG 能理解"番茄"和"西红柿"是一个东西，不是关键词匹配。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务二：判断四个场景是否适合 RAG</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：05:23</p>
+                <p>用户判断：A（电商客服洗涤说明）和 B（法律咨询法规更新）最适合用 RAG；C（闲聊天气心情）不适合；D（医疗诊断）不适合。</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> A/B/C 判断正确；A 场景"产品手册简短、错误率低"的 reasoning 很扎实；C 场景"天气变化快、心情主观"抓住了 RAG 的局限。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 纠正</strong> D 场景判断正确，但核心原因不是"知识库大成本高"——是医学诊断需要<strong>推理判断</strong>，RAG 只能给资料，不能替医生做诊断。"推理 vs 查找"是产品经理必须区分的。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务三：设计知识库分块策略</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：05:27</p>
+                <p>用户方案：按产品数据、安装步骤、常见问题、保修政策、APP操作指南来分块。认为"怎么连接wifi"应该在常见问题里找。</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> 按章节分块是合理起点，体现了结构化思维。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 纠正</strong> "WiFi连接"是操作步骤（打开APP→点+→选设备→输密码），应放在"APP操作指南"里；"常见问题"是故障排查（连不上怎么办/信号弱怎么办）。分块粒度需从"按章节"进化到"按用户问题"——工程师按文档结构切，产品经理按用户意图切。</p>
+            </div>
+            
+            <p style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border-light);">
+                <strong>📌 本次思考讨论评分：21/30</strong> · 平均分 18.0/30（八天）
+            </p>
+            <p style="margin-top:0.5rem; color:var(--accent); font-size:0.85rem;">
+                连续五天 21 分——这个平台期你得自己破了。从"按章节分块"进化到"按用户问题分块"，是产品经理视角的分水岭。
+            </p>
         </div>
     </section>
 
