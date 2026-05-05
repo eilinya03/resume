@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 7 · Prompt Engineering：产品经理的第一把武器 | 魏林桠的AI学习之旅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+            --text-secondary: #4a5568; --text-muted: #718096;
+            --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+            --border: #e2e8f0; --border-light: #edf2f7;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.8; overflow-x: hidden;
+        }
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s;
+        }
+        nav.scrolled {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+        }
+        .nav-inner { max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none; }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.8rem; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .hero {
+            min-height: 40vh; display: flex; align-items: center; justify-content: center;
+            padding-top: 80px;
+            background: linear-gradient(135deg, #db2777 0%, #ec4899 50%, #f472b6 100%);
+            color: white; text-align: center;
+        }
+        .hero-content { max-width: 700px; padding: 0 2rem; }
+        .hero-tag { font-size: 0.75rem; opacity: 0.8; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+        .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: 0.6rem; }
+        .hero p { opacity: 0.85; font-size: 0.95rem; }
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 1rem; background: rgba(255,255,255,0.2);
+            border-radius: 50px; font-size: 0.8rem; margin-top: 1rem; backdrop-filter: blur(8px);
+        }
+
+        section { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+        }
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--accent);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+
+        .question-box {
+            background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(236,72,153,0.08));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .question-box .q-mark {
+            font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-right: 0.5rem;
+        }
+
+        .clue-grid { display: flex; flex-direction: column; gap: 1rem; }
+        .clue-card {
+            background: var(--bg); border: 1px solid var(--border-light);
+            border-radius: 12px; padding: 1.2rem;
+            position: relative;
+        }
+        .clue-card::before {
+            content: '💡'; position: absolute; top: 1.2rem; left: 1.2rem;
+        }
+        .clue-card .clue-text {
+            padding-left: 2rem; font-size: 0.92rem; line-height: 1.8; color: var(--text-secondary);
+        }
+        .clue-card .clue-source {
+            padding-left: 2rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+        }
+
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex; align-items: flex-start; gap: 0.8rem;
+            padding: 1rem 0; border-bottom: 1px solid var(--border-light);
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-status {
+            width: 22px; height: 22px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 0.1rem; font-size: 0.75rem;
+        }
+        .task-status.todo { border: 2px solid var(--border); background: transparent; }
+        .task-status.done { background: var(--success); color: white; border: 2px solid var(--success); }
+        .task-content { flex: 1; }
+        .task-title { font-weight: 600; font-size: 0.9rem; }
+        .task-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.7; }
+        .task-hint {
+            background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px; padding: 0.6rem 0.8rem;
+            font-size: 0.78rem; color: var(--warning); margin-top: 0.5rem;
+        }
+
+        .perspective-box {
+            background: var(--bg); border-radius: 12px; padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+        .perspective-box .perspective-header {
+            font-size: 0.8rem; font-weight: 700; color: var(--accent);
+            margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .perspective-box .perspective-text {
+            font-size: 0.92rem; line-height: 1.9; color: var(--text-secondary);
+        }
+        .perspective-box .perspective-text p { margin-bottom: 0.8rem; }
+        .perspective-box .counter-arg {
+            background: rgba(239,68,68,0.05); border-left: 3px solid var(--danger);
+            padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
+            font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.8rem;
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, rgba(79,70,229,0.05), rgba(236,72,153,0.05));
+            border: 1px solid rgba(79,70,229,0.15);
+        }
+        .score-display {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.4rem 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            color: white; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+        }
+        .weak-tags {
+            display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;
+        }
+        .weak-tag {
+            padding: 0.2rem 0.6rem; background: rgba(245,158,11,0.1);
+            color: var(--warning); border-radius: 20px; font-size: 0.72rem;
+            border: 1px solid rgba(245,158,11,0.2);
+        }
+
+        .video-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .video-item {
+            display: flex; gap: 1rem; padding: 0.8rem; background: var(--bg);
+            border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.3s;
+        }
+        .video-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }
+        .video-thumb {
+            width: 100px; height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+        .video-info { flex: 1; }
+        .video-title { font-weight: 600; font-size: 0.85rem; }
+        .video-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        .nav-arrows {
+            display: flex; justify-content: space-between; margin-top: 2rem;
+        }
+        .nav-arrow {
+            padding: 0.6rem 1.2rem; border: 1px solid var(--border);
+            background: var(--surface); border-radius: 10px;
+            text-decoration: none; color: var(--text);
+            font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
+        }
+        .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-arrow.disabled { opacity: 0.4; pointer-events: none; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            section { padding: 2rem 1rem; }
+            .card { padding: 1.2rem; }
+            .video-item { flex-direction: column; }
+            .video-thumb { width: 100%; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="learning.html" class="nav-logo">← 返回学习主页</a>
+            <ul class="nav-links">
+                <li><a href="learning.html">学习主页</a></li>
+                <li><a href="index.html">简历</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-tag">DAY 7 · WEEK 3 · 02-A2</div>
+            <h1>Prompt Engineering：产品经理的第一把武器</h1>
+            <p>同样一个问题，不同的问法，AI的回答从"胡说八道"变成"精准输出"——这不是魔法，是设计。</p>
+            <div class="status-badge" id="statusBadge">
+                <span id="statusDot">⏳</span>
+                <span id="statusText">等待学习</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日问题 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎯 今日问题</div>
+            <div class="question-box">
+                <span class="q-mark">Q.</span>
+                某连锁餐饮品牌的 AI 智能客服上线后，准确率只有 40%。用户问"北京朝阳门店在哪"，AI 回答"您可以在我们的官网查看所有门店信息"——等于没回答。
+<br><br>
+                用户问"我有一张满50减10的券，今天买一份38的汉堡和一杯15的可乐，能用上吗？"，AI 回答"优惠券的具体使用规则请参考优惠券页面"——等于没回答。
+<br><br>
+                <strong>产品团队给 AI 的指令只有一句话："请回答用户的问题。"</strong>
+<br><br>
+                <strong>如果你负责这个 AI 客服产品，你会怎么改写这句话？不是加更多句子，是改写这句话本身——让它从一个"模糊指令"变成一个"精准操作说明书"。</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- 线索卡片 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">💡 线索卡片 · 我只给碎片，拼图你自己拼</div>
+            <div class="clue-grid">
+                <div class="clue-card">
+                    <div class="clue-text">
+                        Prompt Engineering 不是"给 AI 写几句话"，是"给 AI 写精准操作说明书"。一个 AI 客服项目，同一个问题，不同 prompt 让准确率从 40% 跳到 90%。核心逻辑：从"模糊指令"到"精准指令"的转化。
+                    </div>
+                    <div class="clue-source">来源：AI产品经理面试：如何设计AI产品的提示词工程策略 · 新浪财经</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        好的 Prompt 策略有三层：第一层"定身份"——"你是 XX 餐饮的官方客服"；第二层"画边界"——"仅能回答门店地址、营业时间、会员规则、餐品价格、优惠券使用，超出范围请回复'抱歉无法解答'"；第三层"教方法"——"遇到优惠券问题，先计算总金额，再对比门槛，最后告知是否可用及最终金额"。
+                    </div>
+                    <div class="clue-source">来源：AI产品经理面试：如何设计AI产品的提示词工程策略 · 新浪财经</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        "Few-shot Learning"是提升 AI 输出质量的重要技巧——给 AI 几个示例，让它模仿。比如你想让 AI 把披萨订单解析成 JSON，先给它一个示例输入和一个示例输出，AI 就能学会格式。示例要精心选择，有代表性，覆盖不同情况。
+                    </div>
+                    <div class="clue-source">来源：Prompt Engineering 提示词工程学习路线 · 编程导航</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        思维链（Chain of Thought, CoT）——让 AI "一步步思考"。比如问"我3岁时伴侣年龄是我的3倍，现在20岁，伴侣几岁？"不加 CoT 可能答错，加了 CoT 后 AI 会先算"年龄差=3×3-3=6岁"，再算"20+6=26岁"——推理准确率大幅提升。
+                    </div>
+                    <div class="clue-source">来源：谷歌 Prompt Engineering 白皮书 · 2025年AI提示词工程的10个技巧</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 思考任务 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">✅ 思考任务 · 完成后在微信回复"我学习好了"</div>
+            <ul class="task-list">
+                <li class="task-item">
+                    <div class="task-status todo" id="task1-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务一：改写那句致命的"请回答用户的问题"（20分钟）</div>
+                        <div class="task-desc">
+                            把"请回答用户的问题"改写成一份"精准操作说明书"。<br>
+                            要求：包含<strong>身份</strong>（你是谁）、<strong>边界</strong>（你能做什么不能做什么）、<strong>方法</strong>（遇到复杂问题怎么思考）、<strong>约束</strong>（不能做什么）。<br>
+                            用日常语言写，不用技术术语——这是给 AI 看的"员工手册"，不是给工程师看的代码。
+                        </div>
+                        <div class="task-hint">💡 提示：想象你招了一个实习生，什么都不懂。你不能只说"去工作"，你要说"你是我们店的客服，只能回答和本店相关的问题，如果不知道就说不知道，遇到优惠券问题按这三步走……"</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task2-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务二：设计一个"教 AI 做事"的示例（15分钟）</div>
+                        <div class="task-desc">
+                            用 Few-shot（给示例）的方法，教 AI 做一件事。<br>
+                            比如：你想让 AI 把用户的问题分类成"价格咨询""门店查询""优惠券""投诉""其他"。<br>
+                            写 3 个示例：用户问题 → 分类结果。让 AI 从示例里学会"规律"，而不是直接告诉它规律。
+                        </div>
+                        <div class="task-hint">💡 提示：示例要像"练习题"——有代表性的、覆盖不同情况的。如果 3 个示例都是门店查询，AI 会以为所有问题都是门店查询。</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task3-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务三：一句话面试题（15分钟）</div>
+                        <div class="task-desc">
+                            面试官问你："AI 产品的 prompt 策略怎么设计？"<br>
+                            用一句话回答。这句话要体现你理解 prompt 不是"写句子"，是"产品设计的一部分"。<br>
+                            写完读一遍，删掉任何一个词意思就不完整，就对了。
+                        </div>
+                        <div class="task-hint">💡 提示：从"用户看不到但决定了体验"这个角度想。Prompt 是产品的"隐形UI"——用户看不到 prompt，但 prompt 的好坏直接决定了用户感受到的 AI 是聪明还是愚蠢。</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 我的视角 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">👁️ 我的视角 · 这是我个人的看法，不是标准答案</div>
+            <div class="perspective-box">
+                <div class="perspective-header">🤔 我是这样想的...</div>
+                <div class="perspective-text">
+                    <p>我觉得 Prompt Engineering 最反直觉的一点是：<strong>它看起来是"技术活"，其实是"产品活"。</strong>写 prompt 不是在调代码，是在设计 AI 的"角色""边界""行为模式"——这完全是产品经理的工作。</p>
+                    <p>很多产品经理把 prompt 扔给工程师写，这是本末倒置。工程师懂模型，但不懂用户需要什么语气、什么风格、什么边界。"请回答用户的问题"这种 prompt，工程师觉得没问题——从模型角度看，它确实能运行。但从产品角度看，这是灾难。</p>
+                    <p>Prompt 是 AI 产品的<strong>"隐形UI"</strong>。用户看不到 prompt，但 prompt 的好坏直接决定了用户感受到的 AI 是聪明还是愚蠢。就像餐厅的后厨——顾客看不到厨师怎么炒菜，但菜的味道决定了顾客满不满意。</p>
+                </div>
+                <div class="counter-arg">
+                    <strong>但也有人会反驳我：</strong>"你说 prompt 是产品活，但有些 prompt 涉及复杂的技术参数（temperature、top_p、token 限制），这些不是产品经理能碰的。产品经理写 prompt，会不会越界？"
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 测验得分 -->
+    <section class="reveal">
+        <div class="card quiz-section">
+            <div class="section-label">🎯 微信思考测验</div>
+            <div id="quizResult">
+                <p style="color:var(--text-muted); font-size:0.9rem;">
+                    完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
+                    我会出三道开放题，没有标准答案，评估你的思考过程。
+                </p>
+            </div>
+            <div class="weak-tags" id="weakTags"></div>
+        </div>
+    </section>
+
+    <!-- 拓展视频 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎬 拓展资源</div>
+            <div class="video-list">
+                <a href="https://www.woshipm.com/ai/6215057.html" target="_blank" class="video-item">
+                    <div class="video-thumb">📖</div>
+                    <div class="video-info">
+                        <div class="video-title">谷歌Prompt Engineering白皮书：2025年AI提示词工程的10个技巧</div>
+                        <div class="video-meta">人人都是产品经理 · Zero-shot/Few-shot/CoT详解</div>
+                    </div>
+                </a>
+                <a href="https://finance.sina.com.cn/wm/2026-03-16/doc-inhrctqz8977748.shtml" target="_blank" class="video-item">
+                    <div class="video-thumb">🔗</div>
+                    <div class="video-info">
+                        <div class="video-title">AI产品经理面试：如何设计AI产品的提示词工程策略？</div>
+                        <div class="video-meta">新浪财经 · 三阶Prompt策略实战案例</div>
+                    </div>
+                </a>
+                <a href="https://www.bilibili.com/list/ml1538904134" target="_blank" class="video-item">
+                    <div class="video-thumb">▶</div>
+                    <div class="video-info">
+                        <div class="video-title">产品经理基础课程合集</div>
+                        <div class="video-meta">B站收藏夹 · Prompt Engineering专题</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 导航 -->
+    <section>
+        <div class="nav-arrows">
+            <a href="day-06.html" class="nav-arrow">← 前一天</a>
+            <a href="day-08.html" class="nav-arrow">后一天 →</a>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>
