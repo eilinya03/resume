@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 8 · RAG：AI的"查字典"能力 | 魏林桠的AI学习之旅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+            --text-secondary: #4a5568; --text-muted: #718096;
+            --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+            --border: #e2e8f0; --border-light: #edf2f7;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.8; overflow-x: hidden;
+        }
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s;
+        }
+        nav.scrolled {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+        }
+        .nav-inner { max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none; }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.8rem; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .hero {
+            min-height: 40vh; display: flex; align-items: center; justify-content: center;
+            padding-top: 80px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 50%, #7dd3fc 100%);
+            color: white; text-align: center;
+        }
+        .hero-content { max-width: 700px; padding: 0 2rem; }
+        .hero-tag { font-size: 0.75rem; opacity: 0.8; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+        .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: 0.6rem; }
+        .hero p { opacity: 0.85; font-size: 0.95rem; }
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 1rem; background: rgba(255,255,255,0.2);
+            border-radius: 50px; font-size: 0.8rem; margin-top: 1rem; backdrop-filter: blur(8px);
+        }
+
+        section { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+        }
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--accent);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+
+        .question-box {
+            background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(236,72,153,0.08));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .question-box .q-mark {
+            font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-right: 0.5rem;
+        }
+
+        .clue-grid { display: flex; flex-direction: column; gap: 1rem; }
+        .clue-card {
+            background: var(--bg); border: 1px solid var(--border-light);
+            border-radius: 12px; padding: 1.2rem;
+            position: relative;
+        }
+        .clue-card::before {
+            content: '💡'; position: absolute; top: 1.2rem; left: 1.2rem;
+        }
+        .clue-card .clue-text {
+            padding-left: 2rem; font-size: 0.92rem; line-height: 1.8; color: var(--text-secondary);
+        }
+        .clue-card .clue-source {
+            padding-left: 2rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+        }
+
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex; align-items: flex-start; gap: 0.8rem;
+            padding: 1rem 0; border-bottom: 1px solid var(--border-light);
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-status {
+            width: 22px; height: 22px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 0.1rem; font-size: 0.75rem;
+        }
+        .task-status.todo { border: 2px solid var(--border); background: transparent; }
+        .task-status.done { background: var(--success); color: white; border: 2px solid var(--success); }
+        .task-content { flex: 1; }
+        .task-title { font-weight: 600; font-size: 0.9rem; }
+        .task-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.7; }
+        .task-hint {
+            background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px; padding: 0.6rem 0.8rem;
+            font-size: 0.78rem; color: var(--warning); margin-top: 0.5rem;
+        }
+
+        .perspective-box {
+            background: var(--bg); border-radius: 12px; padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+        .perspective-box .perspective-header {
+            font-size: 0.8rem; font-weight: 700; color: var(--accent);
+            margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .perspective-box .perspective-text {
+            font-size: 0.92rem; line-height: 1.9; color: var(--text-secondary);
+        }
+        .perspective-box .perspective-text p { margin-bottom: 0.8rem; }
+        .perspective-box .counter-arg {
+            background: rgba(239,68,68,0.05); border-left: 3px solid var(--danger);
+            padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
+            font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.8rem;
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, rgba(79,70,229,0.05), rgba(236,72,153,0.05));
+            border: 1px solid rgba(79,70,229,0.15);
+        }
+        .score-display {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.4rem 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            color: white; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+        }
+        .weak-tags {
+            display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;
+        }
+        .weak-tag {
+            padding: 0.2rem 0.6rem; background: rgba(245,158,11,0.1);
+            color: var(--warning); border-radius: 20px; font-size: 0.72rem;
+            border: 1px solid rgba(245,158,11,0.2);
+        }
+
+        .video-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .video-item {
+            display: flex; gap: 1rem; padding: 0.8rem; background: var(--bg);
+            border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.3s;
+        }
+        .video-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }
+        .video-thumb {
+            width: 100px; height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+        .video-info { flex: 1; }
+        .video-title { font-weight: 600; font-size: 0.85rem; }
+        .video-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        .nav-arrows {
+            display: flex; justify-content: space-between; margin-top: 2rem;
+        }
+        .nav-arrow {
+            padding: 0.6rem 1.2rem; border: 1px solid var(--border);
+            background: var(--surface); border-radius: 10px;
+            text-decoration: none; color: var(--text);
+            font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
+        }
+        .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-arrow.disabled { opacity: 0.4; pointer-events: none; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            section { padding: 2rem 1rem; }
+            .card { padding: 1.2rem; }
+            .video-item { flex-direction: column; }
+            .video-thumb { width: 100%; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="learning.html" class="nav-logo">← 返回学习主页</a>
+            <ul class="nav-links">
+                <li><a href="learning.html">学习主页</a></li>
+                <li><a href="index.html">简历</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-tag">DAY 8 · WEEK 3 · 02-A3</div>
+            <h1>RAG：AI的"查字典"能力</h1>
+            <p>大模型知识过时、会编造怎么办？给它装一个"实时查资料的外挂"——这就是 RAG。</p>
+            <div class="status-badge" id="statusBadge">
+                <span id="statusDot">⏳</span>
+                <span id="statusText">等待学习</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日问题 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎯 今日问题</div>
+            <div class="question-box">
+                <span class="q-mark">Q.</span>
+                你公司的 AI 客服上线后，用户发现两个致命问题：<br><br>
+                1. 用户问"2025年最新的会员权益是什么"，AI 回答的还是 2023 年的老政策——因为大模型的"知识"截止在训练数据的时间点，它不知道最新变化。<br><br>
+                2. 用户问"你们内部使用的 XX 系统怎么操作"，AI 完全不知道——因为训练数据里没有你们公司的内部资料。<br><br>
+                <strong>你的任务：不用重新训练大模型（太贵了，几千万美元），设计一个方案让 AI 能回答"新知识"和"内部资料"的问题。</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- 线索卡片 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">💡 线索卡片 · 我只给碎片，拼图你自己拼</div>
+            <div class="clue-grid">
+                <div class="clue-card">
+                    <div class="clue-text">
+                        RAG（检索增强生成）就是给大模型装了一个"实时查资料的外挂"。工作流程三步：检索——先从知识库/文档/数据库里搜到相关信息；增强——把搜到的信息和用户问题一起"喂"给大模型；生成——大模型基于这些资料写出答案。不是凭空编，是有据可查。
+                    </div>
+                    <div class="clue-source">来源：一文搞懂RAG原理，给大模型装个"实时查资料外挂" · CSDN</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        传统搜索是"关键词匹配"——搜"番茄"找不到"西红柿"。RAG 用的是"语义检索"——AI 理解"番茄"和"西红柿"是一个东西，还能理解"番茄炒蛋"和"鸡蛋炒西红柿"是同一道菜。这是产品经理必须知道的差别：不是让用户学会搜关键词，是让 AI 理解用户想问什么。
+                    </div>
+                    <div class="clue-source">来源：产品经理可能需要的AI大模型知识·大白话版 · 微信公众号</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        RAG 最大的价值不是"让 AI 更聪明"，是"让 AI 的知识可控"。你不需要花几千万美元重新训练模型，只需要把公司的内部文档、最新政策、产品手册丢进知识库，AI 就能基于这些资料回答。知识更新了？更新知识库就行，不用动模型。
+                    </div>
+                    <div class="clue-source">来源：大厂RAG面试题：24个RAG八股文 · 博客园</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        RAG 也有坑：知识库里的文档太长，大模型"读不完"，所以要先做"分块"——把长文档切成小段落。切得好不好直接影响检索效果。比如"退换货政策"切成"退""换""货"三个块就废了；切成"退换货流程""退换货条件""退换货时效"三块才对。
+                    </div>
+                    <div class="clue-source">来源：大模型RAG问答技术扫盲 · 微信公众号</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 思考任务 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">✅ 思考任务 · 完成后在微信回复"我学习好了"</div>
+            <ul class="task-list">
+                <li class="task-item">
+                    <div class="task-status todo" id="task1-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务一：一句话解释 RAG（15分钟）</div>
+                        <div class="task-desc">
+                            用一句话向奶奶解释"什么是 RAG"——不能出现"检索""向量""语义"这些词。<br>
+                            要求：奶奶听完能说出"哦，就是让 AI 考试前先看一遍资料再答题呗"，你就成功了。
+                        </div>
+                        <div class="task-hint">💡 提示：从"考试"这个场景想——开卷考和闭卷考的区别是什么？RAG 让 AI 从闭卷考变成开卷考。</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task2-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务二：判断用不用 RAG（15分钟）</div>
+                        <div class="task-desc">
+                            下面四个场景，哪些适合用 RAG，哪些不适合？给出判断+理由。<br>
+                            A. 电商客服回答"这件T恤怎么洗"——产品手册里有洗涤说明<br>
+                            B. 法律咨询回答"2025年新公司法对我的公司有什么影响"——法规每年更新<br>
+                            C. 聊天机器人陪用户闲聊——聊天气、心情、兴趣爱好<br>
+                            D. 医疗助手回答"我最近头疼，可能是什么病"——医学知识库有几万篇论文
+                        </div>
+                        <div class="task-hint">💡 提示：判断标准不是"能不能做"，是"信息是否固定可查"+"幻觉后果是否严重"+"知识是否频繁更新"。</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task3-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务三：设计知识库分块策略（20分钟）</div>
+                        <div class="task-desc">
+                            你负责一个"智能家居产品客服"的 RAG 知识库。知识库里有一份 50 页的产品说明书，包含：产品参数、安装步骤、常见问题、保修政策、APP操作指南。<br><br>
+                            <strong>问题：如果你把这份说明书直接丢给 AI，它会"读不完"（一次最多读几千字）。你需要"分块"——切成小段落。怎么切？按什么维度切？切多大一块合适？</strong><br><br>
+                            给出你的分块方案，说明理由。
+                        </div>
+                        <div class="task-hint">💡 提示：分块的核心原则是"一个块 = 一个完整的信息单元"。如果用户问"怎么连WiFi"，AI 只需要找到"WiFi连接"这一块，不需要读完整本说明书。</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 我的视角 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">👁️ 我的视角 · 这是我个人的看法，不是标准答案</div>
+            <div class="perspective-box">
+                <div class="perspective-header">🤔 我是这样想的...</div>
+                <div class="perspective-text">
+                    <p>我觉得 RAG 最被低估的价值，不是"让 AI 回答更准确"，是<strong>"让产品经理有了控制 AI 知识的能力"</strong>。以前大模型像黑箱，你不知道它知道什么、不知道什么。RAG 让你能决定"AI 应该知道什么"——把什么放进知识库，AI 就知道什么；不放的，AI 就不知道。</p>
+                    <p>这对产品经理意味着<strong>责任边界清晰</strong>。如果 AI 回答错了，你能追溯到"是哪块知识库的内容错了"，而不是"模型又幻觉了"。这在医疗、法律、金融场景里是救命的能力。</p>
+                    <p>但 RAG 不是万能的。如果你的问题需要<strong>推理、判断、创意</strong>（比如"帮我写一首诗"），RAG 帮不上忙——因为知识库里没有"这首诗"，诗是 AI 现编的。RAG 只解决"信息查找"类问题。</p>
+                </div>
+                <div class="counter-arg">
+                    <strong>但也有人会反驳我：</strong>"你说 RAG 让产品经理控制知识，但分块策略、向量检索这些技术细节产品经理根本不懂。产品经理说'按功能模块分块'，工程师说'按语义相似度分块'，谁说了算？"
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 测验得分 -->
+    <section class="reveal">
+        <div class="card quiz-section">
+            <div class="section-label">🎯 微信思考测验</div>
+            <div id="quizResult">
+                <p style="color:var(--text-muted); font-size:0.9rem;">
+                    完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
+                    我会出三道开放题，没有标准答案，评估你的思考过程。
+                </p>
+            </div>
+            <div class="weak-tags" id="weakTags"></div>
+        </div>
+    </section>
+
+    <!-- 拓展视频 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎬 拓展资源</div>
+            <div class="video-list">
+                <a href="https://damodev.csdn.net/694a3c6dbf6b0e4b285dafc6.html" target="_blank" class="video-item">
+                    <div class="video-thumb">📖</div>
+                    <div class="video-info">
+                        <div class="video-title">一文搞懂RAG原理，给大模型装个"实时查资料外挂"</div>
+                        <div class="video-meta">CSDN · RAG大白话详解</div>
+                    </div>
+                </a>
+                <a href="https://www.cnblogs.com/crazymakercircle/p/18980652" target="_blank" class="video-item">
+                    <div class="video-thumb">🔗</div>
+                    <div class="video-info">
+                        <div class="video-title">大厂RAG面试题：24个RAG八股文</div>
+                        <div class="video-meta">博客园 · RAG原理/架构/优化</div>
+                    </div>
+                </a>
+                <a href="https://www.bilibili.com/list/ml1538904134" target="_blank" class="video-item">
+                    <div class="video-thumb">▶</div>
+                    <div class="video-info">
+                        <div class="video-title">产品经理基础课程合集</div>
+                        <div class="video-meta">B站收藏夹 · RAG专题</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 导航 -->
+    <section>
+        <div class="nav-arrows">
+            <a href="day-07.html" class="nav-arrow">← 前一天</a>
+            <a href="day-09.html" class="nav-arrow">后一天 →</a>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>
