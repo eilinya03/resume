@@ -370,6 +370,74 @@
         </div>
     </section>
 
+    <!-- 追加讨论复盘 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">📎 追加讨论复盘 · Day 6 微信思考讨论全记录</div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务一：一句话向奶奶解释 ChatGPT</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：04:15</p>
+                <p>用户回答："GPT 类似一个杂货铺，你想要什么大概率他都有卖的，就算没有卖的他可能到时候也会进货过来卖给你，当然会出现错误，就像你告诉售货员你要清洁牙齿的东西，你想要的是牙膏，他可能给你漱口水。"</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> "杂货铺"类比比"填字游戏"更贴近用户感知；"牙膏 vs 漱口水"的比喻精准抓到"相关但不对"的幻觉特征。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 纠正</strong> 核心机制理解偏差：大模型不是"强行拼接"，是"机制决定了它不会说'我不知道'"——信息缺口时必须"蒙"一个，不能交白卷。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务二：为什么大模型会幻觉</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：04:20</p>
+                <p>用户回答："大模型会幻觉是因为它是猜测下一个词，强行把关联性最有可能出现在一起的词拼接在一起，所以用户会觉得说得有道理产生幻觉。"</p>
+                <p style="margin-top:0.8rem; color:var(--warning);"><strong>⚠️ 纠正后理解</strong> 幻觉不是 bug 是 feature 的副作用。"预测下一个词"这个机制让大模型能写诗写代码，也让它在信息不足时编造。就像考试遇到不会的填空题必须蒙一个，不能空着。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务三：场景判断是否适合用大模型</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：04:13</p>
+                <p>用户排序：C（电商文案）＞ A（银行额度）＞ B（医疗诊断）</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> C 和 B 判断正确；电商文案弱点不会被放大，医疗诊断后果严重。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ A 场景纠正</strong> 银行信用卡额度不是"猜区间"的场景，是"查数据库"的场景。大模型没有权限访问用户流水，不能推断额度。正确做法是调用 API 查询数据库返回精确额度。"猜区间"体现了产品经理的不确定性管理直觉，但要区分场景适用性。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>追加讨论：猜区间的产品经理直觉</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">讨论时间：04:16</p>
+                <p>用户提问："猜区间体现了产品经理的什么直觉？"</p>
+                <p style="margin-top:0.5rem;"><strong>回答：</strong>不确定性管理直觉——预期管理（降低预期+保留惊喜空间）、诚实信号（暗示"这是估算，你再确认"）、风险兜底（预算/工期给区间留缓冲）。但银行额度场景可以精确查到，不需要估算。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>追加讨论：API 是什么</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">讨论时间：04:17</p>
+                <p>用户提问："调用 API 是什么意思？"</p>
+                <p style="margin-top:0.5rem;"><strong>回答：</strong>API = 程序之间的"菜单"。大模型自己没有用户信用卡额度数据，但它能"点菜"——向银行系统发请求，银行返回精确数字。精确可查的信息（余额、订单、库存）不让大模型猜，让它调 API。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>追加讨论：Feature 的含义</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">讨论时间：04:20</p>
+                <p>用户提问："feature 是什么意思？"</p>
+                <p style="margin-top:0.5rem;"><strong>回答：</strong>Feature = 系统被设计出来能做的事。"有问必答"是大模型的 feature，副作用是"有时候会编"。不是 bug（故障）——不能修掉，只能管理。就像汽车"跑得快"的 feature 副作用是"油耗高"。</p>
+            </div>
+            
+            <div>
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>追加讨论：如何解决大模型幻觉</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">讨论时间：04:21</p>
+                <p>用户提问："那如何解决大模型幻觉这个问题？"</p>
+                <p style="margin-top:0.5rem;"><strong>五个管理手段：</strong></p>
+                <p>1. 定位降级——从"决策者"变"建议者"</p>
+                <p>2. 交互加"不确定提示"——灰色标出不确定部分</p>
+                <p>3. 场景切分——高精度场景调 API，创意场景给 AI</p>
+                <p>4. "先查资料再回答"——RAG 模式</p>
+                <p>5. 给验证入口——来源按钮，用户可查证</p>
+                <p style="margin-top:0.5rem; color:var(--accent);"><strong>核心原则：产品经理不是让 AI 变聪明，是让产品设计对幻觉容错。</strong></p>
+            </div>
+            
+            <p style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border-light);">
+                <strong>📌 本次思考讨论评分：20/30</strong> · 平均分 17.5/30（六天）
+            </p>
+        </div>
+    </section>
+
     <!-- 导航 -->
     <section>
         <div class="nav-arrows">
