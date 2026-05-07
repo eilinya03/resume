@@ -325,12 +325,17 @@
         <div class="card quiz-section">
             <div class="section-label">🎯 微信思考测验</div>
             <div id="quizResult">
-                <p style="color:var(--text-muted); font-size:0.9rem;">
+                <span class="score-display">思考讨论 20/30</span>
+                <p style="margin-top:0.8rem; color:var(--text-muted); font-size:0.9rem;">
                     完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
                     我会出三道开放题，没有标准答案，评估你的思考过程。
                 </p>
             </div>
-            <div class="weak-tags" id="weakTags"></div>
+            <div class="weak-tags" id="weakTags">
+                <span class="weak-tag">任务三"产品设计"与"技术方案"边界模糊</span>
+                <span class="weak-tag">任务一"自主性"维度不够显性</span>
+                <span class="weak-tag">任务二核心区分点可更锋利（持续性/工具调用）</span>
+            </div>
         </div>
     </section>
 
@@ -361,6 +366,45 @@
                     </div>
                 </a>
             </div>
+        </div>
+    </section>
+
+    <!-- 追加讨论复盘 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">📎 追加讨论复盘 · Day 9 微信思考讨论全记录</div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务一：一句话解释 Agent</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：01:21</p>
+                <p>用户回答："agent相当于家里雇了一个保姆管家，你说天气又干又热，晚上想在家吃烧烤，保姆就会把家里空调打开，冰箱里补货冷饮，给家里的花浇水，你晚上说想吃烧烤，他就会考虑哪家肉菜新鲜，买回来制作，还会把炭火生好，冷饮摆桌子上，烤好串等你来吃"</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> 保姆类比生动，场景丰富，"考虑哪家肉菜新鲜"体现了自主性。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 纠正</strong> "自主性"不够显性——奶奶听完可能觉得就是普通保姆。应强调"你说目标她自己想办法"vs"你说一样做一样"。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务二：判断用 ChatGPT 还是 Agent</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：01:27</p>
+                <p>用户判断：A（写周报）和 C（分析论文）适合 ChatGPT——单一指令、一次性回答；B（定时查竞品新闻）和 D（订机票酒店）适合 Agent——多线程、自主调用 API、持续自动化。</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> 判断正确，"单一指令/一次性"vs"多线程/持续自动化"的区分清晰。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 可提升</strong> 核心区分点可更锋利：B 的关键是"定时触发"（持续性），D 的关键是"真能去订机票"（工具调用能力）。不是"多不多步骤"，是"有没有外部行动"。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务三：设计 Agent 的"安全刹车"</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：01:40</p>
+                <p>用户方案：（1）prompt 阶段规定编辑信息前检查知识库版本；（2）关键节点插入人工确认（邮件完成后、跟进回复后）；（3）自动监控防止陷入循环。</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> 三条措施覆盖预防、确认、监控三个环节，结构化思维体现。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 纠正</strong> 任务要求"产品设计层面"（什么环节人类确认），但第一条"prompt 阶段"和第三条"自动监控"偏技术方案。第二条方向正确但节点选择有偏差——"跟进邮件有回复后"不是 Agent 行为，应在"批量发送前"和"首次使用新版本后"插入确认。</p>
+                <p style="margin-top:0.8rem; color:var(--accent);"><strong>💬 核心纠正</strong> "产品设计层面"不是"加什么技术功能"，是"在什么人类管理节点让流程停下来"。人类实习生发重要邮件前主管审批——这不是技术，是流程设计。Agent 的"批量发送前预览确认""新版本首次使用后人工抽检""单日发送量超阈值自动暂停"——都是产品设计。</p>
+            </div>
+            
+            <p style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border-light);">
+                <strong>📌 本次思考讨论评分：20/30</strong> · 平均分 18.22/30（九天）
+            </p>
+            <p style="margin-top:0.5rem; color:var(--accent); font-size:0.85rem;">
+                从 21 分掉下来——但掉下来的原因有价值：开始在技术方案和产品设计之间模糊边界了，这是深入学习的信号。真正的产品经理不区分"产品"和"技术"，但面试时必须知道面试官问的是哪一层。
+            </p>
         </div>
     </section>
 
