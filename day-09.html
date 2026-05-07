@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 9 · Agent：AI从回答问题到执行任务 | 魏林桠的AI学习之旅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+            --text-secondary: #4a5568; --text-muted: #718096;
+            --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+            --border: #e2e8f0; --border-light: #edf2f7;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.8; overflow-x: hidden;
+        }
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s;
+        }
+        nav.scrolled {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+        }
+        .nav-inner { max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none; }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.8rem; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .hero {
+            min-height: 40vh; display: flex; align-items: center; justify-content: center;
+            padding-top: 80px;
+            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+            color: white; text-align: center;
+        }
+        .hero-content { max-width: 700px; padding: 0 2rem; }
+        .hero-tag { font-size: 0.75rem; opacity: 0.8; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+        .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: 0.6rem; }
+        .hero p { opacity: 0.85; font-size: 0.95rem; }
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 1rem; background: rgba(255,255,255,0.2);
+            border-radius: 50px; font-size: 0.8rem; margin-top: 1rem; backdrop-filter: blur(8px);
+        }
+
+        section { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+        }
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--accent);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+
+        .question-box {
+            background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(236,72,153,0.08));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .question-box .q-mark {
+            font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-right: 0.5rem;
+        }
+
+        .clue-grid { display: flex; flex-direction: column; gap: 1rem; }
+        .clue-card {
+            background: var(--bg); border: 1px solid var(--border-light);
+            border-radius: 12px; padding: 1.2rem;
+            position: relative;
+        }
+        .clue-card::before {
+            content: '💡'; position: absolute; top: 1.2rem; left: 1.2rem;
+        }
+        .clue-card .clue-text {
+            padding-left: 2rem; font-size: 0.92rem; line-height: 1.8; color: var(--text-secondary);
+        }
+        .clue-card .clue-source {
+            padding-left: 2rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+        }
+
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex; align-items: flex-start; gap: 0.8rem;
+            padding: 1rem 0; border-bottom: 1px solid var(--border-light);
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-status {
+            width: 22px; height: 22px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 0.1rem; font-size: 0.75rem;
+        }
+        .task-status.todo { border: 2px solid var(--border); background: transparent; }
+        .task-status.done { background: var(--success); color: white; border: 2px solid var(--success); }
+        .task-content { flex: 1; }
+        .task-title { font-weight: 600; font-size: 0.9rem; }
+        .task-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.7; }
+        .task-hint {
+            background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px; padding: 0.6rem 0.8rem;
+            font-size: 0.78rem; color: var(--warning); margin-top: 0.5rem;
+        }
+
+        .perspective-box {
+            background: var(--bg); border-radius: 12px; padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+        .perspective-box .perspective-header {
+            font-size: 0.8rem; font-weight: 700; color: var(--accent);
+            margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .perspective-box .perspective-text {
+            font-size: 0.92rem; line-height: 1.9; color: var(--text-secondary);
+        }
+        .perspective-box .perspective-text p { margin-bottom: 0.8rem; }
+        .perspective-box .counter-arg {
+            background: rgba(239,68,68,0.05); border-left: 3px solid var(--danger);
+            padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
+            font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.8rem;
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, rgba(79,70,229,0.05), rgba(236,72,153,0.05));
+            border: 1px solid rgba(79,70,229,0.15);
+        }
+        .score-display {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.4rem 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            color: white; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+        }
+        .weak-tags {
+            display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;
+        }
+        .weak-tag {
+            padding: 0.2rem 0.6rem; background: rgba(245,158,11,0.1);
+            color: var(--warning); border-radius: 20px; font-size: 0.72rem;
+            border: 1px solid rgba(245,158,11,0.2);
+        }
+
+        .video-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .video-item {
+            display: flex; gap: 1rem; padding: 0.8rem; background: var(--bg);
+            border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.3s;
+        }
+        .video-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }
+        .video-thumb {
+            width: 100px; height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+        .video-info { flex: 1; }
+        .video-title { font-weight: 600; font-size: 0.85rem; }
+        .video-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        .nav-arrows {
+            display: flex; justify-content: space-between; margin-top: 2rem;
+        }
+        .nav-arrow {
+            padding: 0.6rem 1.2rem; border: 1px solid var(--border);
+            background: var(--surface); border-radius: 10px;
+            text-decoration: none; color: var(--text);
+            font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
+        }
+        .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-arrow.disabled { opacity: 0.4; pointer-events: none; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            section { padding: 2rem 1rem; }
+            .card { padding: 1.2rem; }
+            .video-item { flex-direction: column; }
+            .video-thumb { width: 100%; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="learning.html" class="nav-logo">← 返回学习主页</a>
+            <ul class="nav-links">
+                <li><a href="learning.html">学习主页</a></li>
+                <li><a href="index.html">简历</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-tag">DAY 9 · WEEK 3 · 02-A4</div>
+            <h1>Agent：AI从回答问题到执行任务</h1>
+            <p>ChatGPT 是"嘴替"，Agent 是"能扛事的数字实习生"。</p>
+            <div class="status-badge" id="statusBadge">
+                <span id="statusDot">⏳</span>
+                <span id="statusText">等待学习</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日问题 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎯 今日问题</div>
+            <div class="question-box">
+                <span class="q-mark">Q.</span>
+                你让 ChatGPT "帮我规划一次日本深度游"，它给你列了 10 个景点、5 家餐厅、3 条路线——写得很好，但你还是得自己去查机票、比价格、订酒店、查签证政策、把行程整理成文档发给同行伙伴。<br><br>
+                <strong>为什么 AI 能"规划"但不能"执行"？如果 AI 能自己调用机票比价 API、分析签证政策、预订酒店、生成行程文档并发邮件——它还是同一个 ChatGPT 吗？</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- 线索卡片 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">💡 线索卡片 · 我只给碎片，拼图你自己拼</div>
+            <div class="clue-grid">
+                <div class="clue-card">
+                    <div class="clue-text">
+                        Agent（智能体）= 大模型（脑子）+ 记忆模块（记住你说过的话）+ 规划引擎（拆解任务步骤）+ 工具库（能调用 API、查天气、发邮件）。ChatGPT 是"只动嘴"——它给你答案，但不帮你干活。Agent 是"既动脑子又动手"——它想好了怎么做，就真去做了。
+                    </div>
+                    <div class="clue-source">来源：从思考，到行动：由Manus爆火谈AI Agent · 微信公众号</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        Agent 的核心是 ReAct 循环——不是"反应"，是"Reason（推理）+ Act（行动）"。流程是：用户提需求 → AI 思考"我要做什么"（Thought）→ AI 决定"调用什么工具"（Action）→ 工具返回结果（Observation）→ AI 再看结果思考"下一步做什么" → 循环直到完成。就像一个实习生接到任务，先想、再查、再汇报、再调整。
+                    </div>
+                    <div class="clue-source">来源：拿下面试官：AI Agent工程师岗位通关实战指南 · 什么值得买</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        Agent 不是万能的。它适合"目标明确、步骤可拆解、工具可用"的任务——比如"监控竞品融资新闻，自动汇总发我邮箱"。它不适合"目标模糊、需要创意判断、结果不可预期"的任务——比如"帮我写一首让我女朋友感动的诗"。后者用 ChatGPT 更好，前者用 Agent 更好。
+                    </div>
+                    <div class="clue-source">来源：入行AI产品经理必看：RAG、多模态、Agent学习顺序全解析 · CSDN</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        产品经理设计 Agent 产品时，核心不是"让 AI 更聪明"，是"定义清楚什么任务交给 Agent、什么任务留给人类、什么时候需要人类确认"。Agent 犯错比 ChatGPT 更危险——因为它真的会去订机票、真的会去发邮件、真的会去改数据库。每一个"行动"都需要产品设计兜底机制。
+                    </div>
+                    <div class="clue-source">来源：从思考，到行动：由Manus爆火谈AI Agent · 微信公众号</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 思考任务 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">✅ 思考任务 · 完成后在微信回复"我学习好了"</div>
+            <ul class="task-list">
+                <li class="task-item">
+                    <div class="task-status todo" id="task1-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务一：一句话解释 Agent（15分钟）</div>
+                        <div class="task-desc">
+                            用一句话向奶奶解释"什么是 AI Agent"——不能出现"ReAct""API""工具调用"这些词。<br>
+                            检验标准：奶奶听完说"哦，就是雇了一个能自己查资料、自己办事的实习生呗"，你就成功了。
+                        </div>
+                        <div class="task-hint">💡 提示：想想你和实习生的区别——实习生不只是回答问题，他会自己查资料、写文档、发邮件、改表格，做完还向你汇报。Agent 就是数字版的实习生。</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task2-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务二：判断用 ChatGPT 还是 Agent（15分钟）</div>
+                        <div class="task-desc">
+                            下面四个场景，哪些适合用 ChatGPT（聊天问答），哪些适合用 Agent（自动执行）？给出判断+理由。<br>
+                            A. 用户说"帮我写一份项目周报"——ChatGPT 生成文字，用户复制粘贴到邮件里<br>
+                            B. 用户说"每天早上 8 点，自动查公司竞品的新闻，汇总成简报发我邮箱"——需要定时执行、查新闻、写简报、发邮件<br>
+                            C. 用户说"帮我分析一下这篇论文的创新点"——上传 PDF，AI 读完后给出分析<br>
+                            D. 用户说"我下周三要去上海出差，帮我订机票、订酒店、查当地天气、生成行程表"——涉及多个工具调用
+                        </div>
+                        <div class="task-hint">💡 提示：判断标准是"任务是否需要多个步骤自动执行"+"是否需要调用外部工具（发邮件、订机票、查 API）"+"是否是一次性问答还是持续自动化"。</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task3-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务三：设计 Agent 的"安全刹车"（20分钟）</div>
+                        <div class="task-desc">
+                            你设计了一个"数字实习生"Agent，它能自动帮销售团队发送跟进邮件。但有一天，它给 1000 个客户发送了错误的产品信息——因为知识库里的产品手册是旧版本。<br><br>
+                            <strong>问题：作为产品经理，你会设计什么机制来防止这种"自动化灾难"？至少想出 3 个兜底措施。不是技术方案（比如"加个校验"），是产品设计层面的措施——比如"在什么环节让人类确认"。</strong>
+                        </div>
+                        <div class="task-hint">💡 提示：想想人类实习生犯错时，公司有什么流程？"重要邮件需要主管审批""发送前预览""每日限额""异常监控报警"——这些人类管理手段，怎么转化为 Agent 的产品设计？</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 我的视角 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">👁️ 我的视角 · 这是我个人的看法，不是标准答案</div>
+            <div class="perspective-box">
+                <div class="perspective-header">🤔 我是这样想的...</div>
+                <div class="perspective-text">
+                    <p>我觉得 Agent 最大的陷阱是<strong>"过度自动化"</strong>。产品经理容易陷入一个思维："既然 Agent 能自动执行，那就让它自动做一切吧！"但这是个危险的想法。</p>
+                    <p>人类实习生能自己发邮件，但重要邮件需要主管审批——不是因为实习生笨，是因为<strong>错误成本太高</strong>。Agent 也一样：它能自动做的事越多，它自动犯错的破坏力就越大。产品设计不是"让 Agent 做更多"，是"定义清楚什么必须人工确认"。</p>
+                    <p>还有一个反直觉的点：<strong>Agent 的"自主性"和"可控性"是矛盾的。</strong>自主性越高，用户越省事儿；可控性越高，用户越放心。产品设计要在两者之间找平衡点——不是让 Agent 全自动化，也不是每一步都让用户确认，是"关键节点让人类看一眼"。</p>
+                </div>
+                <div class="counter-arg">
+                    <strong>但也有人会反驳我：</strong>"你说关键节点让人类确认，那 Agent 的价值不就是'省事儿'吗？如果每一步都要确认，用户为什么不自己做？Agent 和 Excel 宏有什么区别？"
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 测验得分 -->
+    <section class="reveal">
+        <div class="card quiz-section">
+            <div class="section-label">🎯 微信思考测验</div>
+            <div id="quizResult">
+                <p style="color:var(--text-muted); font-size:0.9rem;">
+                    完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
+                    我会出三道开放题，没有标准答案，评估你的思考过程。
+                </p>
+            </div>
+            <div class="weak-tags" id="weakTags"></div>
+        </div>
+    </section>
+
+    <!-- 拓展视频 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎬 拓展资源</div>
+            <div class="video-list">
+                <a href="http://mp.weixin.qq.com/s?__biz=MzUxNTUyMjE4Mw==&mid=2247526843&idx=1&sn=a629187867810eb2fdb5ea16d934f7e7" target="_blank" class="video-item">
+                    <div class="video-thumb">📖</div>
+                    <div class="video-info">
+                        <div class="video-title">从思考，到行动：由Manus爆火谈AI Agent</div>
+                        <div class="video-meta">微信公众号 · Agent=大模型+记忆+规划+工具库</div>
+                    </div>
+                </a>
+                <a href="https://blog.csdn.net/2401_84204413/article/details/160819382" target="_blank" class="video-item">
+                    <div class="video-thumb">🔗</div>
+                    <div class="video-info">
+                        <div class="video-title">入行AI产品经理必看：RAG、多模态、Agent学习顺序全解析</div>
+                        <div class="video-meta">CSDN · Agent是想象力/RAG是基本盘</div>
+                    </div>
+                </a>
+                <a href="https://www.bilibili.com/list/ml1538904134" target="_blank" class="video-item">
+                    <div class="video-thumb">▶</div>
+                    <div class="video-info">
+                        <div class="video-title">产品经理基础课程合集</div>
+                        <div class="video-meta">B站收藏夹 · AI Agent专题</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 导航 -->
+    <section>
+        <div class="nav-arrows">
+            <a href="day-08.html" class="nav-arrow">← 前一天</a>
+            <a href="day-10.html" class="nav-arrow">后一天 →</a>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>
