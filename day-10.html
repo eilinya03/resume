@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 10 · 多模态：图文音视频的理解与生成 | 魏林桠的AI学习之旅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+            --text-secondary: #4a5568; --text-muted: #718096;
+            --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+            --border: #e2e8f0; --border-light: #edf2f7;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.8; overflow-x: hidden;
+        }
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s;
+        }
+        nav.scrolled {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+        }
+        .nav-inner { max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none; }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.8rem; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .hero {
+            min-height: 40vh; display: flex; align-items: center; justify-content: center;
+            padding-top: 80px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%);
+            color: white; text-align: center;
+        }
+        .hero-content { max-width: 700px; padding: 0 2rem; }
+        .hero-tag { font-size: 0.75rem; opacity: 0.8; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+        .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: 0.6rem; }
+        .hero p { opacity: 0.85; font-size: 0.95rem; }
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 1rem; background: rgba(255,255,255,0.2);
+            border-radius: 50px; font-size: 0.8rem; margin-top: 1rem; backdrop-filter: blur(8px);
+        }
+
+        section { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+        }
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; color: var(--accent);
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+
+        .question-box {
+            background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(236,72,153,0.08));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .question-box .q-mark {
+            font-size: 1.5rem; font-weight: 900; color: var(--accent); margin-right: 0.5rem;
+        }
+
+        .clue-grid { display: flex; flex-direction: column; gap: 1rem; }
+        .clue-card {
+            background: var(--bg); border: 1px solid var(--border-light);
+            border-radius: 12px; padding: 1.2rem;
+            position: relative;
+        }
+        .clue-card::before {
+            content: '💡'; position: absolute; top: 1.2rem; left: 1.2rem;
+        }
+        .clue-card .clue-text {
+            padding-left: 2rem; font-size: 0.92rem; line-height: 1.8; color: var(--text-secondary);
+        }
+        .clue-card .clue-source {
+            padding-left: 2rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+        }
+
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex; align-items: flex-start; gap: 0.8rem;
+            padding: 1rem 0; border-bottom: 1px solid var(--border-light);
+        }
+        .task-item:last-child { border-bottom: none; }
+        .task-status {
+            width: 22px; height: 22px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 0.1rem; font-size: 0.75rem;
+        }
+        .task-status.todo { border: 2px solid var(--border); background: transparent; }
+        .task-status.done { background: var(--success); color: white; border: 2px solid var(--success); }
+        .task-content { flex: 1; }
+        .task-title { font-weight: 600; font-size: 0.9rem; }
+        .task-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.7; }
+        .task-hint {
+            background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px; padding: 0.6rem 0.8rem;
+            font-size: 0.78rem; color: var(--warning); margin-top: 0.5rem;
+        }
+
+        .perspective-box {
+            background: var(--bg); border-radius: 12px; padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+        .perspective-box .perspective-header {
+            font-size: 0.8rem; font-weight: 700; color: var(--accent);
+            margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .perspective-box .perspective-text {
+            font-size: 0.92rem; line-height: 1.9; color: var(--text-secondary);
+        }
+        .perspective-box .perspective-text p { margin-bottom: 0.8rem; }
+        .perspective-box .counter-arg {
+            background: rgba(239,68,68,0.05); border-left: 3px solid var(--danger);
+            padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
+            font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.8rem;
+        }
+
+        .quiz-section {
+            background: linear-gradient(135deg, rgba(79,70,229,0.05), rgba(236,72,153,0.05));
+            border: 1px solid rgba(79,70,229,0.15);
+        }
+        .score-display {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.4rem 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            color: white; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+        }
+        .weak-tags {
+            display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;
+        }
+        .weak-tag {
+            padding: 0.2rem 0.6rem; background: rgba(245,158,11,0.1);
+            color: var(--warning); border-radius: 20px; font-size: 0.72rem;
+            border: 1px solid rgba(245,158,11,0.2);
+        }
+
+        .video-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .video-item {
+            display: flex; gap: 1rem; padding: 0.8rem; background: var(--bg);
+            border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.3s;
+        }
+        .video-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }
+        .video-thumb {
+            width: 100px; height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+        .video-info { flex: 1; }
+        .video-title { font-weight: 600; font-size: 0.85rem; }
+        .video-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        .nav-arrows {
+            display: flex; justify-content: space-between; margin-top: 2rem;
+        }
+        .nav-arrow {
+            padding: 0.6rem 1.2rem; border: 1px solid var(--border);
+            background: var(--surface); border-radius: 10px;
+            text-decoration: none; color: var(--text);
+            font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
+        }
+        .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-arrow.disabled { opacity: 0.4; pointer-events: none; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            section { padding: 2rem 1rem; }
+            .card { padding: 1.2rem; }
+            .video-item { flex-direction: column; }
+            .video-thumb { width: 100%; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="learning.html" class="nav-logo">← 返回学习主页</a>
+            <ul class="nav-links">
+                <li><a href="learning.html">学习主页</a></li>
+                <li><a href="index.html">简历</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-tag">DAY 10 · WEEK 3 · 02-A5</div>
+            <h1>多模态：图文音视频的理解与生成</h1>
+            <p>给 AI 装上眼睛和耳朵——它不只认得字，还能看懂图、听懂话、生成视频。</p>
+            <div class="status-badge" id="statusBadge">
+                <span id="statusDot">⏳</span>
+                <span id="statusText">等待学习</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日问题 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎯 今日问题</div>
+            <div class="question-box">
+                <span class="q-mark">Q.</span>
+                你用手机拍了一张冰箱里的剩菜照片，打开一个 AI 应用，AI 看了一眼照片说："还剩番茄、鸡蛋和青椒，我建议你做番茄炒蛋，或者青椒炒蛋。需要我生成一份采购清单补货吗？"<br><br>
+                <strong>这个场景里，AI 做了哪些"多模态"的事？如果只能让它看照片（图像理解）或者只能让它听你说（语音识别），哪个体验更好？为什么？</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- 线索卡片 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">💡 线索卡片 · 我只给碎片，拼图你自己拼</div>
+            <div class="clue-grid">
+                <div class="clue-card">
+                    <div class="clue-text">
+                        多模态就是让 AI 同时处理多种"信息形式"——文字、图片、语音、视频。以前的大模型是"文科生"，只会看文字；多模态大模型是"文理全才"，既能看文字也能看图、听声音。核心技术叫"多模态对齐"——让"猫"这个词和猫的图片在 AI 脑子里是同一个东西。
+                    </div>
+                    <div class="clue-source">来源：大模型入门指南：从"人工智障"到"超级大脑"的进化之旅 · CSDN</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        多模态不是"功能越多越好"。产品经理的核心问题是"用户在这个场景下最自然的输入方式是什么"。拍图搜商品，图像输入最自然；开车时查导航，语音输入最自然；写周报时整理数据，文字输入最自然。不要为了多模态而多模态。
+                    </div>
+                    <div class="clue-source">来源：AI面试题：如何设计多模态AI产品的交互？ · 人人都是产品经理</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        文生图（Midjourney、Stable Diffusion）不是"把文字变成图片"，是"理解文字描述，画出对应画面"。这里有两个难点：一是理解——"一只红色的猫坐在沙发上"，AI 得知道"红色""猫""坐""沙发"分别对应画面的什么；二是生成——把这些元素组合成一张合理的图，不是拼积木，是画画。
+                    </div>
+                    <div class="clue-source">来源：揭秘多模态大模型：图生文与文生图全解析 · CSDN</div>
+                </div>
+                <div class="clue-card">
+                    <div class="clue-text">
+                        多模态产品的交互设计核心是"以用户任务流为中心"。创意类任务（海报生成）优先支持"文字+参考图"输入；信息查询类（文档问答）优先支持"文字+PDF"输入；效率类任务（会议纪要）优先支持"语音+视频"输入。模态切换要自然，不能让用户重新发起任务。
+                    </div>
+                    <div class="clue-source">来源：AI面试题：如何设计多模态AI产品的交互？ · 人人都是产品经理</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 思考任务 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">✅ 思考任务 · 完成后在微信回复"我学习好了"</div>
+            <ul class="task-list">
+                <li class="task-item">
+                    <div class="task-status todo" id="task1-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务一：一句话解释多模态（15分钟）</div>
+                        <div class="task-desc">
+                            用一句话向奶奶解释"什么是多模态"——不能出现"模态""对齐""向量空间"这些词。<br>
+                            检验标准：奶奶听完说"哦，就是AI不只会看书，还会看图、听话、说话呗"，你就成功了。
+                        </div>
+                        <div class="task-hint">💡 提示：想想你小时候怎么学"苹果"——妈妈给你看苹果图片（视觉）、说"苹果"（听觉）、让你摸苹果（触觉）。多模态就是让 AI 像小孩一样，用多种感官认识世界。</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task2-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务二：判断用单模态还是多模态（15分钟）</div>
+                        <div class="task-desc">
+                            下面四个场景，哪些"必须"用多模态，哪些"没必要"用多模态？给出判断+理由。<br>
+                            A. 用户拍一张衣服照片，AI 推荐相似款式和搭配——"拍图搜款"<br>
+                            B. 用户说"帮我写一份项目周报"——纯文字生成<br>
+                            C. 用户上传一段 20 分钟会议录像，AI 生成文字纪要+重点提取——音视频转文字<br>
+                            D. 用户在厨房双手沾满面粉，说"播放下一步菜谱"——语音交互
+                        </div>
+                        <div class="task-hint">💡 提示：判断标准是"用户在这个场景下有没有非文字的信息需要处理"+"用户的双手/眼睛是否被占用"+"信息本身是不是非文字形式"。</div>
+                    </div>
+                </li>
+                <li class="task-item">
+                    <div class="task-status todo" id="task3-status"></div>
+                    <div class="task-content">
+                        <div class="task-title">任务三：设计多模态交互流程（20分钟）</div>
+                        <div class="task-desc">
+                            你设计一个"AI 装修助手"——用户想重新装修客厅。用户可能会：拍一张现在的客厅照片（图）、语音说"我想要简约风格，预算 5 万"（语音）、发一张网上看到的参考图（图）、打字补充"不要白色沙发"（文字）。<br><br>
+                            <strong>问题：作为产品经理，你会怎么设计这个产品的交互流程？用户在什么时候用什么方式输入？AI 在什么节点输出什么形式的结果？至少画出 3 个关键交互节点。</strong>
+                        </div>
+                        <div class="task-hint">💡 提示：想想你工业设计里的"用户旅程图"——第一步用户做什么、产品怎么响应、第二步用户做什么... 多模态产品的关键是"模态切换不中断任务流"。</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 我的视角 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">👁️ 我的视角 · 这是我个人的看法，不是标准答案</div>
+            <div class="perspective-box">
+                <div class="perspective-header">🤔 我是这样想的...</div>
+                <div class="perspective-text">
+                    <p>我觉得多模态最大的产品陷阱是<strong>"为了多模态而多模态"</strong>。不是每个产品都需要语音+图像+视频。一个写周报的工具，加语音输入就是多余——用户在电脑前打字比说话更快更准。但一个做饭助手，语音交互就是必须的——用户手上沾着油没法打字。</p>
+                    <p>关键问题是：<strong>"用户的双手和眼睛在这个场景下是否被占用？"</strong> 被占用了 → 需要语音（解放双手）；没被占用 → 文字/图像更精准。这是工业设计的思维——人机交互首先要考虑用户身体状态。</p>
+                    <p>还有一个点：<strong>多模态的"成本"不只是技术成本，是"认知成本"</strong>。每增加一种输入方式，用户就要多做一个选择——"我是打字、拍照还是说话？"选择本身就是在消耗用户精力。好的多模态产品应该让用户"无感切换"，不是"被迫选择"。</p>
+                </div>
+                <div class="counter-arg">
+                    <strong>但也有人会反驳我：</strong>"你说不要为了多模态而多模态，但用户就是喜欢'全能型'产品——微信能打字能发语音能视频，没人说微信功能太多。多模态难道不是产品竞争力的体现吗？"
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 测验得分 -->
+    <section class="reveal">
+        <div class="card quiz-section">
+            <div class="section-label">🎯 微信思考测验</div>
+            <div id="quizResult">
+                <p style="color:var(--text-muted); font-size:0.9rem;">
+                    完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
+                    我会出三道开放题，没有标准答案，评估你的思考过程。
+                </p>
+            </div>
+            <div class="weak-tags" id="weakTags"></div>
+        </div>
+    </section>
+
+    <!-- 拓展视频 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">🎬 拓展资源</div>
+            <div class="video-list">
+                <a href="https://www.woshipm.com/ai/6349998.html" target="_blank" class="video-item">
+                    <div class="video-thumb">📖</div>
+                    <div class="video-info">
+                        <div class="video-title">AI面试题：如何设计多模态AI产品的交互？</div>
+                        <div class="video-meta">人人都是产品经理 · 多模态交互4步闭环法</div>
+                    </div>
+                </a>
+                <a href="https://www.woshipm.com/ai/6306189.html" target="_blank" class="video-item">
+                    <div class="video-thumb">🔗</div>
+                    <div class="video-info">
+                        <div class="video-title">多模态：AI从理解世界到改造世界的关键跃迁</div>
+                        <div class="video-meta">人人都是产品经理 · 多模态类型与应用场景</div>
+                    </div>
+                </a>
+                <a href="https://www.bilibili.com/list/ml1538904134" target="_blank" class="video-item">
+                    <div class="video-thumb">▶</div>
+                    <div class="video-info">
+                        <div class="video-title">产品经理基础课程合集</div>
+                        <div class="video-meta">B站收藏夹 · 多模态专题</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 导航 -->
+    <section>
+        <div class="nav-arrows">
+            <a href="day-09.html" class="nav-arrow">← 前一天</a>
+            <a href="day-11.html" class="nav-arrow">后一天 →</a>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>
