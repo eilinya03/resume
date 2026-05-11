@@ -325,12 +325,17 @@
         <div class="card quiz-section">
             <div class="section-label">🎯 微信思考测验</div>
             <div id="quizResult">
-                <p style="color:var(--text-muted); font-size:0.9rem;">
+                <span class="score-display">思考讨论 19/30</span>
+                <p style="margin-top:0.8rem; color:var(--text-muted); font-size:0.9rem;">
                     完成思考任务后，在微信回复"我学习好了"进行讨论。<br>
                     我会出三道开放题，没有标准答案，评估你的思考过程。
                 </p>
             </div>
-            <div class="weak-tags" id="weakTags"></div>
+            <div class="weak-tags" id="weakTags">
+                <span class="weak-tag">任务二D场景"语音单模态"vs"多模态"区分不够锋利</span>
+                <span class="weak-tag">任务三缺少交互节点衔接设计（AI如何引导下一步）</span>
+                <span class="weak-tag">任务一漏了"生成"维度（AI能画苹果）</span>
+            </div>
         </div>
     </section>
 
@@ -361,6 +366,44 @@
                     </div>
                 </a>
             </div>
+        </div>
+    </section>
+
+    <!-- 追加讨论复盘 -->
+    <section class="reveal">
+        <div class="card">
+            <div class="section-label">📎 追加讨论复盘 · Day 10 微信思考讨论全记录</div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务一：一句话解释多模态</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：23:43</p>
+                <p>用户回答："ai像小孩一样用视觉触觉听觉感知世界，听到苹果 就能联想出图片文字，能够表达出关于'苹果'描述 ，苹果的味道模样"</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> 复用了之前"教小孩认动物"的类比，聪明。多感官联想的描述生动。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 纠正</strong> 漏了"生成"维度——多模态不只是"理解"，还能"生成"（你说"画一个苹果"，AI 真的画出来）。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务二：判断用单模态还是多模态</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：00:07</p>
+                <p>用户判断：A（拍图搜款）必须多模态；B（写周报）没必要；C（会议录像）必须多模态；D（厨房语音）必须多模态。</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> A/B/C 判断正确；C 场景"识别不同音色"的 reasoning 有洞察力。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 纠正</strong> D 场景是"语音单模态"不是"多模态"——用户双手被占用所以必须语音输入，但不需要同时处理图像/视频。核心区分点是"信息形式决定模态"，不是"功能越丰富越需要多模态"。</p>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border-light);">
+                <p style="margin-bottom:0.5rem; color:var(--text);"><strong>任务三：设计多模态交互流程</strong></p>
+                <p style="margin-bottom:0.8rem; font-size:0.82rem; color:var(--text-muted);">用户回答时间：00:51</p>
+                <p>用户方案：用户拍客厅照片→AI 输出布局/风格/预算；用户语音说风格预算→AI 输出效果图+预算分配；用户上传参考图+打字补充→AI 综合输出。</p>
+                <p style="margin-top:0.8rem; color:var(--success);"><strong>💡 亮点</strong> 识别了每种输入的模态类型，有输入-输出对应意识。</p>
+                <p style="margin-top:0.5rem; color:var(--warning);"><strong>⚠️ 纠正</strong> 缺少"交互节点"的具体设计——AI 在第一步后如何引导用户到第二步？输出形式不够具体（"效果图"是图片还是 3D？"预算分配"是表格还是文字？）。流程设计需要颗粒度。</p>
+            </div>
+            
+            <p style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border-light);">
+                <strong>📌 本次思考讨论评分：19/30</strong> · 平均分 18.1/30（十天）
+            </p>
+            <p style="margin-top:0.5rem; color:var(--accent); font-size:0.85rem;">
+                从 21 分连续回落到 19——不是变差了，是题目变难了。任务三需要"设计"而不是"判断"，这是产品经理的核心能力分水岭。从"识别是什么"进化到"设计怎么做"，你需要补上颗粒度。
+            </p>
         </div>
     </section>
 
