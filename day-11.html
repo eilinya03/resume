@@ -1,151 +1,282 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Day 11 · 多模态AI产品拆解</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-    background: #f5f3ef;
-    color: #2a2a2a;
-    line-height: 1.8;
-    padding: 20px;
-    max-width: 720px;
-    margin: 0 auto;
-  }
-  h1 {
-    font-size: 1.6rem;
-    color: #5a4fcf;
-    margin-bottom: 8px;
-    font-weight: 700;
-  }
-  .subtitle {
-    color: #888;
-    font-size: 0.9rem;
-    margin-bottom: 32px;
-  }
-  h2 {
-    font-size: 1.2rem;
-    color: #444;
-    margin-top: 28px;
-    margin-bottom: 12px;
-    border-left: 3px solid #5a4fcf;
-    padding-left: 10px;
-  }
-  p {
-    margin-bottom: 12px;
-  }
-  .highlight {
-    background: #eae6ff;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 500;
-  }
-  .task-box {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  }
-  .product-name {
-    font-weight: 700;
-    color: #5a4fcf;
-    margin-bottom: 8px;
-  }
-  .question {
-    background: #faf9f7;
-    border-left: 3px solid #ff7a45;
-    padding: 12px 14px;
-    margin: 16px 0;
-    border-radius: 0 8px 8px 0;
-  }
-  .question strong {
-    color: #ff7a45;
-  }
-  .tip {
-    background: #fff8e6;
-    border-left: 3px solid #ffc53d;
-    padding: 12px 14px;
-    margin: 20px 0;
-    border-radius: 0 8px 8px 0;
-    font-size: 0.95rem;
-  }
-  .bottom {
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid #ddd;
-    color: #888;
-    font-size: 0.85rem;
-    text-align: center;
-  }
-  ul {
-    margin-left: 20px;
-    margin-bottom: 12px;
-  }
-  li {
-    margin-bottom: 6px;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 11 · 多模态AI产品拆解</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+      --text-secondary: #4a5568; --text-muted: #718096;
+      --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+      --border: #e2e8f0; --border-light: #edf2f7;
+      --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.8;
+    }
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem;
+      transition: all 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+    }
+    .nav-inner {
+      max-width: 800px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-logo {
+      font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none;
+    }
+    .nav-back {
+      font-size: 0.8rem; color: var(--text-muted); text-decoration: none; font-weight: 500;
+      transition: color 0.3s;
+    }
+    .nav-back:hover { color: var(--accent); }
+
+    .hero {
+      min-height: 40vh; display: flex; align-items: center; justify-content: center;
+      padding-top: 80px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+      color: white; text-align: center;
+    }
+    .hero-content { max-width: 700px; padding: 0 2rem; }
+    .hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 900; margin-bottom: 0.6rem; }
+    .hero .day-tag {
+      display: inline-block; padding: 0.3rem 0.9rem; background: rgba(255,255,255,0.2);
+      border-radius: 50px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .hero p { font-size: 1rem; opacity: 0.85; }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+    .section-tag {
+      font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em;
+      text-transform: uppercase; font-weight: 700; margin-bottom: 0.6rem; display: block;
+    }
+    .section-title { font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.8rem; }
+    .section-desc { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow);
+      transition: all 0.3s;
+    }
+    .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .card + .card { margin-top: 1.2rem; }
+
+    .product-header {
+      display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem;
+    }
+    .product-num {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.9rem; flex-shrink: 0;
+    }
+    .product-name { font-weight: 700; font-size: 1.05rem; }
+    .product-meta {
+      display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;
+    }
+    .tag {
+      padding: 0.2rem 0.6rem; background: var(--bg); border-radius: 6px;
+      font-size: 0.72rem; color: var(--text-secondary); border: 1px solid var(--border-light);
+    }
+
+    .question-block {
+      background: linear-gradient(135deg, rgba(79,70,229,0.04), rgba(236,72,153,0.04));
+      border: 1px solid rgba(79,70,229,0.15); border-radius: 16px;
+      padding: 1.5rem; margin: 2rem 0;
+    }
+    .question-block h3 {
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .question-block h3::before {
+      content: '💡'; font-size: 1.2rem;
+    }
+    .question-list { list-style: none; }
+    .question-list li {
+      padding: 0.7rem 0; border-bottom: 1px solid var(--border-light);
+      display: flex; align-items: flex-start; gap: 0.7rem; font-size: 0.95rem;
+    }
+    .question-list li:last-child { border-bottom: none; }
+    .question-list li::before {
+      content: attr(data-num); font-weight: 800; color: var(--accent); font-size: 0.85rem;
+      min-width: 24px; text-align: center; background: var(--bg); border-radius: 6px;
+      padding: 0.1rem 0;
+    }
+
+    .task-box {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 1.8rem; margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .task-box .highlight {
+      background: linear-gradient(135deg, rgba(79,70,229,0.1), rgba(236,72,153,0.1));
+      padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;
+      color: var(--accent);
+    }
+
+    .tip {
+      background: linear-gradient(135deg, #fff8e6, #fff0d6);
+      border: 1px solid #ffc53d; border-radius: 16px;
+      padding: 1.2rem 1.5rem; margin: 2rem 0;
+      font-size: 0.9rem; color: var(--text-secondary);
+    }
+    .tip strong { color: var(--text); }
+
+    .bottom {
+      margin-top: 3rem; padding-top: 2rem;
+      border-top: 1px solid var(--border-light);
+      text-align: center; color: var(--text-muted); font-size: 0.85rem;
+    }
+
+    .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      .container { padding: 2rem 1rem; }
+      .card { padding: 1.2rem; }
+      .hero { min-height: 35vh; }
+    }
+  </style>
 </head>
 <body>
 
-<h1>Day 11 · 多模态AI产品拆解</h1>
-<div class="subtitle">不是从零创造，而是学会用产品经理的眼睛去拆解</div>
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">魏林桠</a>
+    <a href="learning.html" class="nav-back">← 返回学习主页</a>
+  </div>
+</nav>
 
-<div class="task-box">
-  <p>今天换思路——你不是设计师，你是<strong>评论家</strong>。就像看电影不需要会拍，但可以说哪里好看哪里烂。</p>
-  <p>多模态设计的本质：<span class="highlight">让用户用最自然的方式表达，用最直观的方式接收。</span>记住这句话，拆解的时候看它有没有做到。</p>
+<section class="hero">
+  <div class="hero-content">
+    <div class="day-tag">DAY 11 · 多模态AI产品拆解</div>
+    <h1>不是从零创造<br>而是学会用产品经理的眼睛去拆解</h1>
+    <p>今天换思路——你不是设计师，你是评论家</p>
+  </div>
+</section>
+
+<div class="container">
+
+  <section class="reveal">
+    <span class="section-tag">核心理念</span>
+    <h2 class="section-title">多模态设计的本质</h2>
+    <div class="task-box">
+      <p>就像看电影不需要会拍，但可以说哪里好看哪里烂。多模态设计的本质只有一句话：</p>
+      <p style="font-size: 1.1rem; margin-top: 1rem;">
+        <span class="highlight">让用户用最自然的方式表达，用最直观的方式接收。</span>
+      </p>
+      <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">记住这句话，拆解的时候看它有没有做到。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">今日任务</span>
+    <h2 class="section-title">拆解三个多模态AI产品</h2>
+
+    <div class="card">
+      <div class="product-header">
+        <div class="product-num">1</div>
+        <div>
+          <div class="product-name">妙鸭相机（或类似AI写真应用）</div>
+          <div class="product-meta">
+            <span class="tag">📷 图像输入</span>
+            <span class="tag">✍️ 文字输入</span>
+            <span class="tag">🖼️ 图像输出</span>
+          </div>
+        </div>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.95rem;">用户为什么要用这个东西？它的核心爽点是什么？如果让你改进，你会加什么功能？</p>
+    </div>
+
+    <div class="card">
+      <div class="product-header">
+        <div class="product-num">2</div>
+        <div>
+          <div class="product-name">剪映「图文成片」或「数字人」功能</div>
+          <div class="product-meta">
+            <span class="tag">✍️ 文字输入</span>
+            <span class="tag">🔊 音频输入</span>
+            <span class="tag">🎬 视频输出</span>
+          </div>
+        </div>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.95rem;">它解决了什么痛点？多模态之间是怎么配合的？</p>
+    </div>
+
+    <div class="card">
+      <div class="product-header">
+        <div class="product-num">3</div>
+        <div>
+          <div class="product-name">你自己选</div>
+          <div class="product-meta">
+            <span class="tag">自由拆解</span>
+          </div>
+        </div>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.95rem;">可以是淘宝AI试衣、地图AR导航、甚至一个小程序。拆解它的输入输出模态，以及它让你爽或让你烦的地方。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">拆解框架</span>
+    <h2 class="section-title">回答这几个问题即可</h2>
+    <div class="question-block">
+      <h3>五个拆解问题</h3>
+      <ol class="question-list">
+        <li data-num="01">这个产品让用户输入了什么？（文字/语音/图片/视频？）</li>
+        <li data-num="02">它输出给用户什么？</li>
+        <li data-num="03">用户的核心需求是什么？（省时间？好玩？解决具体麻烦？）</li>
+        <li data-num="04">如果删掉一个模态，产品还能用吗？</li>
+        <li data-num="05">如果你是产品经理，你会怎么改进它？</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">今日问题</span>
+    <h2 class="section-title">回答完算完成任务</h2>
+    <div class="question-block">
+      <h3>需要你回答的问题</h3>
+      <ul class="question-list">
+        <li data-num="Q">你选的第三个产品是什么？</li>
+        <li data-num="Q">三个产品中，哪一个的模态搭配让你感觉最自然？为什么？</li>
+        <li data-num="Q">有没有一个产品让你觉得「多此一举」（为了多模态而多模态）？</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="tip reveal">
+    <strong>💡 提示</strong><br>
+    昨天你说「太难了想不到那么多」——今天不用你凭空设计，你只需要看别人做好的东西，然后说哪里好哪里烂。就像你平时刷到一个难用的APP，会跟朋友吐槽一样。用那个语气回答就行。
+  </div>
+
+  <div class="bottom reveal">
+    Day 11 · 想好了直接微信回复我，我等你 🖤
+  </div>
+
 </div>
 
-<h2>一、今日任务：拆解三个多模态AI产品</h2>
-
-<div class="task-box">
-  <div class="product-name">产品1：妙鸭相机（或类似AI写真应用）</div>
-  <p>输入模态：照片（图像）、文字（风格描述）</p>
-  <p>输出模态：图像</p>
-  <p>思考点：用户为什么要用这个东西？它的核心爽点是什么？如果让你改进，你会加什么功能？</p>
-</div>
-
-<div class="task-box">
-  <div class="product-name">产品2：剪映「图文成片」或「数字人」功能</div>
-  <p>输入模态：文字（文案）、音频（配音选择）、图像/视频素材</p>
-  <p>输出模态：视频</p>
-  <p>思考点：它解决了什么痛点？多模态之间是怎么配合的？</p>
-</div>
-
-<div class="task-box">
-  <div class="product-name">产品3：你自己选</div>
-  <p>可以是淘宝AI试衣、地图AR导航、甚至一个小程序</p>
-  <p>拆解它的输入输出模态，以及它让你爽或让你烦的地方</p>
-</div>
-
-<h2>二、拆解框架（回答这几个问题即可）</h2>
-
-<ol>
-  <li>这个产品让用户输入了什么？（文字/语音/图片/视频？）</li>
-  <li>它输出给用户什么？</li>
-  <li>用户的核心需求是什么？（省时间？好玩？解决具体麻烦？）</li>
-  <li>如果删掉一个模态，产品还能用吗？</li>
-  <li>如果你是产品经理，你会怎么改进它？</li>
-</ol>
-
-<div class="question">
-  <strong>今日问题（回答完算完成任务）：</strong><br>
-  你选的第三个产品是什么？<br>
-  三个产品中，哪一个的模态搭配让你感觉最自然？为什么？<br>
-  有没有一个产品让你觉得「多此一举」（为了多模态而多模态）？
-</div>
-
-<div class="tip">
-  昨天你说「太难了想不到那么多」——今天不用你凭空设计，你只需要看别人做好的东西，然后说哪里好哪里烂。就像你平时刷到一个难用的APP，会跟朋友吐槽一样。用那个语气回答就行。
-</div>
-
-<div class="bottom">
-  Day 11 · 想好了直接微信回复我，我等你 🖤
-</div>
+<script>
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+  });
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
 
 </body>
 </html>
