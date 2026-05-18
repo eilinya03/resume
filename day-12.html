@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 12 · 结构化Prompt设计</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+      --text-secondary: #4a5568; --text-muted: #718096;
+      --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+      --border: #e2e8f0; --border-light: #edf2f7;
+      --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.8;
+    }
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem;
+      transition: all 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+    }
+    .nav-inner {
+      max-width: 800px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-logo {
+      font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none;
+    }
+    .nav-back {
+      font-size: 0.8rem; color: var(--text-muted); text-decoration: none; font-weight: 500;
+      transition: color 0.3s;
+    }
+    .nav-back:hover { color: var(--accent); }
+
+    .hero {
+      min-height: 40vh; display: flex; align-items: center; justify-content: center;
+      padding-top: 80px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+      color: white; text-align: center;
+    }
+    .hero-content { max-width: 700px; padding: 0 2rem; }
+    .hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 900; margin-bottom: 0.6rem; }
+    .hero .day-tag {
+      display: inline-block; padding: 0.3rem 0.9rem; background: rgba(255,255,255,0.2);
+      border-radius: 50px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .hero p { font-size: 1rem; opacity: 0.85; }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+    .section-tag {
+      font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em;
+      text-transform: uppercase; font-weight: 700; margin-bottom: 0.6rem; display: block;
+    }
+    .section-title { font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.8rem; }
+    .section-desc { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow);
+      transition: all 0.3s;
+    }
+    .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .card + .card { margin-top: 1.2rem; }
+
+    .prompt-box {
+      background: #1a1a2e; border-radius: 12px; padding: 1.2rem 1.5rem;
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem;
+      color: #e2e8f0; line-height: 1.7; margin: 1rem 0; overflow-x: auto;
+    }
+    .prompt-box .bad { color: #ef4444; }
+    .prompt-box .good { color: #10b981; }
+    .prompt-box .key { color: #818cf8; font-weight: 600; }
+
+    .framework-box {
+      background: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(236,72,153,0.06));
+      border: 1px solid rgba(79,70,229,0.15); border-radius: 16px;
+      padding: 1.5rem; margin: 1.5rem 0;
+    }
+    .framework-box h3 {
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;
+    }
+    .framework-item {
+      display: flex; align-items: flex-start; gap: 0.8rem;
+      padding: 0.8rem 0; border-bottom: 1px solid var(--border-light);
+    }
+    .framework-item:last-child { border-bottom: none; }
+    .framework-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.8rem; flex-shrink: 0;
+    }
+    .framework-text { flex: 1; }
+    .framework-text strong { display: block; margin-bottom: 0.2rem; }
+    .framework-text span { color: var(--text-secondary); font-size: 0.9rem; }
+
+    .task-box {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 1.8rem; margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .question-block {
+      background: linear-gradient(135deg, rgba(79,70,229,0.04), rgba(236,72,153,0.04));
+      border: 1px solid rgba(79,70,229,0.15); border-radius: 16px;
+      padding: 1.5rem; margin: 2rem 0;
+    }
+    .question-block h3 {
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .question-block h3::before {
+      content: '💡'; font-size: 1.2rem;
+    }
+    .question-list { list-style: none; }
+    .question-list li {
+      padding: 0.7rem 0; border-bottom: 1px solid var(--border-light);
+      display: flex; align-items: flex-start; gap: 0.7rem; font-size: 0.95rem;
+    }
+    .question-list li:last-child { border-bottom: none; }
+    .question-list li::before {
+      content: attr(data-num); font-weight: 800; color: var(--accent); font-size: 0.85rem;
+      min-width: 24px; text-align: center; background: var(--bg); border-radius: 6px;
+      padding: 0.1rem 0;
+    }
+
+    .tip {
+      background: linear-gradient(135deg, #fff8e6, #fff0d6);
+      border: 1px solid #ffc53d; border-radius: 16px;
+      padding: 1.2rem 1.5rem; margin: 2rem 0;
+      font-size: 0.9rem; color: var(--text-secondary);
+    }
+    .tip strong { color: var(--text); }
+
+    .bottom {
+      margin-top: 3rem; padding-top: 2rem;
+      border-top: 1px solid var(--border-light);
+      text-align: center; color: var(--text-muted); font-size: 0.85rem;
+    }
+
+    .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      .container { padding: 2rem 1rem; }
+      .card { padding: 1.2rem; }
+      .hero { min-height: 35vh; }
+    }
+  </style>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">魏林桠</a>
+    <a href="learning.html" class="nav-back">← 返回学习主页</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="day-tag">DAY 12 · 结构化Prompt设计</div>
+    <h1>给AI下需求<br>就像给设计师下brief</h1>
+    <p>产品经理每天写prompt，但大多数人写得像「随便画个好看的」</p>
+  </div>
+</section>
+
+<div class="container">
+
+  <section class="reveal">
+    <span class="section-tag">先思考</span>
+    <h2 class="section-title">你平时怎么跟设计师沟通？</h2>
+    <div class="task-box">
+      <p>回忆一下你以前做工业设计的时候，给设计师下需求会说些什么？</p>
+      <p style="margin-top: 1rem;">你会说「帮我设计个杯子」然后等对方猜吗？</p>
+      <p style="margin-top: 1rem;">不会。你会说：「目标用户是25-35岁白领，使用场景是办公室，需要保温功能，材质要不锈钢，风格偏北欧极简，预算控制在200元以内，周五之前给我三版草图。」</p>
+      <p style="margin-top: 1rem;">这就是<strong>结构化brief</strong>。有角色、有场景、有约束、有输出要求。</p>
+      <p style="margin-top: 1rem; color: var(--text-muted);">给AI下prompt，和给设计师下brief，本质是一回事。但很多人写prompt像「随便画个好看的」——然后骂AI输出垃圾。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">对比感受</span>
+    <h2 class="section-title">烂prompt vs 好prompt</h2>
+
+    <div class="card">
+      <p style="font-weight: 700; margin-bottom: 0.8rem; color: #ef4444;">❌ 烂prompt（大多数人写的）</p>
+      <div class="prompt-box">
+        <span class="bad">帮我写一篇关于人工智能的文章。</span>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">AI收到的信息：主题=人工智能，格式=文章，长度=未知，受众=未知，风格=未知。它只能猜，猜错了你就骂它笨。</p>
+    </div>
+
+    <div class="card">
+      <p style="font-weight: 700; margin-bottom: 0.8rem; color: #10b981;">✅ 结构化prompt（产品经理写的）</p>
+      <div class="prompt-box">
+<span class="key">【角色】</span>你是一位科技专栏作家，擅长用生活化比喻解释复杂概念，读者是零基础的大学生。<br><br>
+<span class="key">【背景】</span>最近AI产品频繁翻车，大众对AI产生了不信任感，需要用一篇科普文章重建信心。<br><br>
+<span class="key">【任务】</span>写一篇关于"为什么AI会犯错"的科普文章。<br><br>
+<span class="key">【约束】</span><br>
+· 字数控制在1500字左右<br>
+· 至少用2个生活化比喻（不要用"黑盒子"这种老比喻）<br>
+· 语气轻松，不要学术腔<br>
+· 结尾要给读者一个"可以怎么做"的行动建议<br><br>
+<span class="key">【输出格式】</span><br>
+· 先给我一个文章大纲（3-4个部分）<br>
+· 确认大纲后再写全文<br>
+· 每个部分用emoji分段
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">AI收到的信息：角色明确、背景清晰、任务具体、约束量化、输出有步骤。它不需要猜，只需要执行。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">方法论</span>
+    <h2 class="section-title">结构化Prompt五要素</h2>
+    <div class="framework-box">
+      <div class="framework-item">
+        <div class="framework-icon">1</div>
+        <div class="framework-text">
+          <strong>角色（Role）</strong>
+          <span>你是谁？专家、顾问、作家、还是「一个耐心的解释者」？角色决定了AI的语气、知识深度和表达方式。</span>
+        </div>
+      </div>
+      <div class="framework-item">
+        <div class="framework-icon">2</div>
+        <div class="framework-text">
+          <strong>背景（Context）</strong>
+          <span>这件事的前因后果是什么？受众是谁？要解决什么问题？背景越具体，AI越不跑偏。</span>
+        </div>
+      </div>
+      <div class="framework-item">
+        <div class="framework-icon">3</div>
+        <div class="framework-text">
+          <strong>任务（Task）</strong>
+          <span>具体要做什么？写一篇文章、分析竞品、设计流程图？任务要单一，不要一次塞五个任务。</span>
+        </div>
+      </div>
+      <div class="framework-item">
+        <div class="framework-icon">4</div>
+        <div class="framework-text">
+          <strong>约束（Constraints）</strong>
+          <span>字数、风格、禁忌词、格式要求、必须包含的元素。约束是产品经理的灵魂——没有约束的需求等于没提需求。</span>
+        </div>
+      </div>
+      <div class="framework-item">
+        <div class="framework-icon">5</div>
+        <div class="framework-text">
+          <strong>输出格式（Output）</strong>
+          <span>分段？列表？表格（不，我们不用表格）？先给大纲再写全文？输出格式决定了你拿到的东西能不能直接用。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">实战任务</span>
+    <h2 class="section-title">动手改一个烂prompt</h2>
+    <div class="task-box">
+      <p style="font-weight: 700; margin-bottom: 1rem;">原始prompt（产品经理面试高频题）：</p>
+      <div class="prompt-box">
+        <span class="bad">分析微信为什么成功。</span>
+      </div>
+      <p style="margin-top: 1rem;">这题在面试里经常出现，但如果你直接把这个prompt丢给AI，它会给你一份百度百科式的答案——正确但无用。</p>
+      <p style="margin-top: 1rem;"><strong>你的任务：</strong>用结构化Prompt五要素，把上面的烂prompt改写成一份能让AI输出「面试级别高质量回答」的prompt。</p>
+      <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">提示：想想如果是你在面试里被问到这道题，你希望听到什么样的分析框架？把时间线、用户增长、产品决策、竞争策略都考虑进去。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">引导思考</span>
+    <h2 class="section-title">一个问题</h2>
+    <div class="question-block">
+      <h3> Prompt和产品需求文档（PRD）有什么区别？</h3>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">你以前写PRD的时候，会写背景、目标用户、功能描述、验收标准。这和今天的结构化prompt几乎一模一样。</p>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; margin-top: 1rem;">但有一个关键区别：PRD是给工程师看的，prompt是给AI看的。工程师会问你「这里是不是漏了」，AI不会——AI只会默默猜，猜错就输出垃圾。</p>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; margin-top: 1rem;">所以写prompt比写PRD更需要「防呆设计」——因为你不能指望AI反问。你觉得这是让prompt变简单了，还是变难了？</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">今日问题</span>
+    <h2 class="section-title">回答完算完成任务</h2>
+    <div class="question-block">
+      <h3>需要你回答的问题</h3>
+      <ul class="question-list">
+        <li data-num="01">用结构化五要素改写「分析微信为什么成功」这个prompt，把改写后的完整版本发给我。</li>
+        <li data-num="02">你以前给设计师下brief的时候，有没有遇到过「对方没get到点」的情况？这和AI输出不符合预期有什么相似的地方？</li>
+        <li data-num="03">Prompt需要「防呆设计」——因为AI不会反问。你觉得这是让prompt变简单了，还是变难了？为什么？</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="tip reveal">
+    <strong>💡 提示</strong><br>
+    改写prompt的时候不要追求「一次写完美」。先写一版，然后用它去试（你可以直接发给Kimi试试效果），根据输出再调整约束条件。产品经理的prompt能力不是背框架背出来的，是「写了→试了→改了三遍」练出来的。
+  </div>
+
+  <div class="bottom reveal">
+    Day 12 · 想好了直接微信回复我，我等你 🖤
+  </div>
+
+</div>
+
+<script>
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+  });
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+
+</body>
+</html>
