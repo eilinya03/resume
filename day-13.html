@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 13 · Chain-of-Thought：让AI像人一样思考</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+      --text-secondary: #4a5568; --text-muted: #718096;
+      --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+      --border: #e2e8f0; --border-light: #edf2f7;
+      --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.8;
+    }
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem;
+      transition: all 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+    }
+    .nav-inner {
+      max-width: 800px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-logo {
+      font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none;
+    }
+    .nav-back {
+      font-size: 0.8rem; color: var(--text-muted); text-decoration: none; font-weight: 500;
+      transition: color 0.3s;
+    }
+    .nav-back:hover { color: var(--accent); }
+
+    .hero {
+      min-height: 40vh; display: flex; align-items: center; justify-content: center;
+      padding-top: 80px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+      color: white; text-align: center;
+    }
+    .hero-content { max-width: 700px; padding: 0 2rem; }
+    .hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 900; margin-bottom: 0.6rem; }
+    .hero .day-tag {
+      display: inline-block; padding: 0.3rem 0.9rem; background: rgba(255,255,255,0.2);
+      border-radius: 50px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .hero p { font-size: 1rem; opacity: 0.85; }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+    .section-tag {
+      font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em;
+      text-transform: uppercase; font-weight: 700; margin-bottom: 0.6rem; display: block;
+    }
+    .section-title { font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.8rem; }
+    .section-desc { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow);
+      transition: all 0.3s;
+    }
+    .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .card + .card { margin-top: 1.2rem; }
+
+    .prompt-box {
+      background: #1a1a2e; border-radius: 12px; padding: 1.2rem 1.5rem;
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem;
+      color: #e2e8f0; line-height: 1.7; margin: 1rem 0; overflow-x: auto;
+    }
+    .prompt-box .bad { color: #ef4444; }
+    .prompt-box .good { color: #10b981; }
+    .prompt-box .key { color: #818cf8; font-weight: 600; }
+    .prompt-box .step { color: #ffc53d; }
+
+    .task-box {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 1.8rem; margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .question-block {
+      background: linear-gradient(135deg, rgba(79,70,229,0.04), rgba(236,72,153,0.04));
+      border: 1px solid rgba(79,70,229,0.15); border-radius: 16px;
+      padding: 1.5rem; margin: 2rem 0;
+    }
+    .question-block h3 {
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .question-block h3::before {
+      content: '💡'; font-size: 1.2rem;
+    }
+    .question-list { list-style: none; }
+    .question-list li {
+      padding: 0.7rem 0; border-bottom: 1px solid var(--border-light);
+      display: flex; align-items: flex-start; gap: 0.7rem; font-size: 0.95rem;
+    }
+    .question-list li:last-child { border-bottom: none; }
+    .question-list li::before {
+      content: attr(data-num); font-weight: 800; color: var(--accent); font-size: 0.85rem;
+      min-width: 24px; text-align: center; background: var(--bg); border-radius: 6px;
+      padding: 0.1rem 0;
+    }
+
+    .tip {
+      background: linear-gradient(135deg, #fff8e6, #fff0d6);
+      border: 1px solid #ffc53d; border-radius: 16px;
+      padding: 1.2rem 1.5rem; margin: 2rem 0;
+      font-size: 0.9rem; color: var(--text-secondary);
+    }
+    .tip strong { color: var(--text); }
+
+    .bottom {
+      margin-top: 3rem; padding-top: 2rem;
+      border-top: 1px solid var(--border-light);
+      text-align: center; color: var(--text-muted); font-size: 0.85rem;
+    }
+
+    .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      .container { padding: 2rem 1rem; }
+      .card { padding: 1.2rem; }
+      .hero { min-height: 35vh; }
+    }
+  </style>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">魏林桠</a>
+    <a href="learning.html" class="nav-back">← 返回学习主页</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="day-tag">DAY 13 · Chain-of-Thought</div>
+    <h1>让AI像人一样思考<br>而不是直接给答案</h1>
+    <p>大多数人让AI直接回答复杂问题——就像让一个人心算三位数乘法</p>
+  </div>
+</section>
+
+<div class="container">
+
+  <section class="reveal">
+    <span class="section-tag">先思考</span>
+    <h2 class="section-title">你遇到过这种情况吗？</h2>
+    <div class="task-box">
+      <p>你问AI一个稍微复杂点的问题，比如：</p>
+      <div class="prompt-box">
+        <span class="bad">一家奶茶店每天卖200杯，每杯成本8块售价18块，一个月房租1万，请3个员工每人每月4000，问这家奶茶店一个月净利润多少？</span>
+      </div>
+      <p style="margin-top: 1rem;">AI可能直接给你一个数字。但如果它算错了，你很难发现错在哪一步。</p>
+      <p style="margin-top: 1rem;">但如果AI这样回答呢：</p>
+      <div class="prompt-box">
+        <span class="step">Step 1：计算月收入</span><br>
+        每天200杯 × 每杯18元 × 30天 = 108,000元<br><br>
+        <span class="step">Step 2：计算原材料成本</span><br>
+        每天200杯 × 每杯8元 × 30天 = 48,000元<br><br>
+        <span class="step">Step 3：计算固定成本</span><br>
+        房租10,000元 + 员工工资3×4,000 = 12,000元 → 固定成本总计22,000元<br><br>
+        <span class="step">Step 4：计算净利润</span><br>
+        收入108,000 - 原材料48,000 - 固定成本22,000 = <span class="good">38,000元</span>
+      </div>
+      <p style="margin-top: 1rem; color: var(--text-muted);">每一步都看得见，错了也能定位。这就是Chain-of-Thought（思维链）的本质。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">核心概念</span>
+    <h2 class="section-title">什么是Chain-of-Thought？</h2>
+    <div class="task-box">
+      <p style="font-size: 1.05rem; margin-bottom: 1rem;">
+        <strong>Chain-of-Thought（CoT）= 让AI把思考过程一步步写出来，而不是直接跳到结论。</strong>
+      </p>
+      <p>人脑也一样。让你心算 17×23，你可能在脑子里拆解成 (17×20) + (17×3) = 340 + 51 = 391。你不是直接"知道"391，你是一步步算的。</p>
+      <p style="margin-top: 1rem;">AI的"脑子"其实更笨——它本质上是预测下一个词。如果让它直接预测"最终答案"，中间有任何一步错了，整个答案就崩了。</p>
+      <p style="margin-top: 1rem;">但如果强迫它先把中间步骤写出来，每一步都是一个"检查点"，错了可以纠正，对了可以继续。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">对比感受</span>
+    <h2 class="section-title">不加CoT vs 加CoT</h2>
+
+    <div class="card">
+      <p style="font-weight: 700; margin-bottom: 0.8rem; color: #ef4444;">❌ 不加CoT（Zero-shot直接问）</p>
+      <div class="prompt-box">
+        <span class="bad">分析抖音为什么能打败快手。</span>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem;">AI会直接给你几个原因：算法推荐更精准、内容更短平快、年轻用户更多……这些可能对，但你不知道它是怎么推理的，也无法判断每个原因的权重。</p>
+    </div>
+
+    <div class="card">
+      <p style="font-weight: 700; margin-bottom: 0.8rem; color: #10b981;">✅ 加CoT（一步步拆解）</p>
+      <div class="prompt-box">
+        <span class="key">【任务】</span>分析抖音为什么能在短视频赛道超越快手。<br><br>
+        <span class="key">【要求】</span>请按照以下步骤逐步分析，每一步先给出你的推理，再给出结论：<br><br>
+        <span class="step">Step 1</span>：先对比2016-2018年抖音和快手的产品定位差异<br>
+        <span class="step">Step 2</span>：分析算法推荐机制对内容分发效率的影响<br>
+        <span class="step">Step 3</span>：对比两者的用户增长策略（邀请码 vs 算法自然分发）<br>
+        <span class="step">Step 4</span>：分析内容创作者生态的差异<br>
+        <span class="step">Step 5</span>：综合以上因素，给出"抖音为什么能超越快手"的核心判断<br><br>
+        <span class="key">【约束】</span>每一步的结论用一句话总结；如果某一步信息不足，明确说明"这一步需要补充数据"。
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem;">AI被迫把推理过程展开，每一步都可以单独验证对错。你作为产品经理，拿到这个分析后可以逐条追问，而不是面对一坨正确答案但无法判断质量的输出。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">实战技巧</span>
+    <h2 class="section-title">什么时候必须用CoT？</h2>
+    <div class="task-box">
+      <p style="margin-bottom: 1rem;"><strong>三种情况，不加CoT就是在赌：</strong></p>
+      <p><strong>1. 多步骤推理</strong> —— 数学题、财务分析、逻辑推理题。一步错步步错。</p>
+      <p style="margin-top: 0.8rem;"><strong>2. 需要可追溯的结论</strong> —— 产品分析、竞品拆解、用户调研结论。你拿到结果后需要向老板解释"为什么得出这个结论"，没有中间步骤就解释不了。</p>
+      <p style="margin-top: 0.8rem;"><strong>3. 复杂决策</strong> —— "要不要进入某个市场"、"选A方案还是B方案"。直接给结论的AI相当于一个说"选A"但不解释为什么的同事——你会听他的吗？</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">引导思考</span>
+    <h2 class="section-title">一个问题</h2>
+    <div class="question-block">
+      <h3>CoT是万能药吗？</h3>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
+        如果我问AI"明天北京天气怎么样"，加CoT让它一步步分析气压、湿度、季风——这不仅没必要，还会增加错误概率（AI的地理气象知识其实有限）。
+      </p>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; margin-top: 1rem;">
+        所以CoT不是越多越好。判断标准很简单：<strong>这个问题的答案，你自己在心里会不会"一步一步想"？如果是，就让AI也一步一步想；如果不是，直接要答案。</strong>
+      </p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">今日问题</span>
+    <h2 class="section-title">回答完算完成任务</h2>
+    <div class="question-block">
+      <h3>需要你回答的问题</h3>
+      <ul class="question-list">
+        <li data-num="01">选一个你最近做过的设计项目（或者竞赛项目），如果让你用CoT的方式重新复盘，你会拆成哪几步？把步骤列出来。</li>
+        <li data-num="02">Chain-of-Thought和昨天学的"结构化Prompt五要素"有什么关系？是同一回事还是两回事？</li>
+        <li data-num="03">你以前做竞赛/项目答辩的时候，评委有没有追问过"你为什么得出这个结论"？那时候你是怎么回答的？如果当时有AI帮你提前做CoT分析，会有什么不同？</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="tip reveal">
+    <strong>💡 提示</strong><br>
+    回答第一题的时候，不要追求步骤多。关键是每一步之间要有<strong>逻辑依赖关系</strong>——后一步必须依赖前一步的结论才能继续。如果步骤之间是并列关系，那不需要CoT，直接列要点就行。
+  </div>
+
+  <div class="bottom reveal">
+    Day 13 · 想好了直接微信回复我，我等你 🖤
+  </div>
+
+</div>
+
+<script>
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+  });
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+
+</body>
+</html>
