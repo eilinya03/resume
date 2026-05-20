@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 14 · Prompt实战：从需求到成品</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+      --text-secondary: #4a5568; --text-muted: #718096;
+      --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+      --border: #e2e8f0; --border-light: #edf2f7;
+      --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.8;
+    }
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem;
+      transition: all 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+    }
+    .nav-inner {
+      max-width: 800px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-logo {
+      font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none;
+    }
+    .nav-back {
+      font-size: 0.8rem; color: var(--text-muted); text-decoration: none; font-weight: 500;
+      transition: color 0.3s;
+    }
+    .nav-back:hover { color: var(--accent); }
+
+    .hero {
+      min-height: 40vh; display: flex; align-items: center; justify-content: center;
+      padding-top: 80px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+      color: white; text-align: center;
+    }
+    .hero-content { max-width: 700px; padding: 0 2rem; }
+    .hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 900; margin-bottom: 0.6rem; }
+    .hero .day-tag {
+      display: inline-block; padding: 0.3rem 0.9rem; background: rgba(255,255,255,0.2);
+      border-radius: 50px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .hero p { font-size: 1rem; opacity: 0.85; }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+    .section-tag {
+      font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em;
+      text-transform: uppercase; font-weight: 700; margin-bottom: 0.6rem; display: block;
+    }
+    .section-title { font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.8rem; }
+    .section-desc { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow);
+      transition: all 0.3s;
+    }
+    .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .card + .card { margin-top: 1.2rem; }
+
+    .prompt-box {
+      background: #1a1a2e; border-radius: 12px; padding: 1.2rem 1.5rem;
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem;
+      color: #e2e8f0; line-height: 1.7; margin: 1rem 0; overflow-x: auto;
+    }
+    .prompt-box .key { color: #818cf8; font-weight: 600; }
+    .prompt-box .step { color: #ffc53d; }
+
+    .task-box {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 1.8rem; margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .question-block {
+      background: linear-gradient(135deg, rgba(79,70,229,0.04), rgba(236,72,153,0.04));
+      border: 1px solid rgba(79,70,229,0.15); border-radius: 16px;
+      padding: 1.5rem; margin: 2rem 0;
+    }
+    .question-block h3 {
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .question-block h3::before {
+      content: '💡'; font-size: 1.2rem;
+    }
+    .question-list { list-style: none; }
+    .question-list li {
+      padding: 0.7rem 0; border-bottom: 1px solid var(--border-light);
+      display: flex; align-items: flex-start; gap: 0.7rem; font-size: 0.95rem;
+    }
+    .question-list li:last-child { border-bottom: none; }
+    .question-list li::before {
+      content: attr(data-num); font-weight: 800; color: var(--accent); font-size: 0.85rem;
+      min-width: 24px; text-align: center; background: var(--bg); border-radius: 6px;
+      padding: 0.1rem 0;
+    }
+
+    .tip {
+      background: linear-gradient(135deg, #fff8e6, #fff0d6);
+      border: 1px solid #ffc53d; border-radius: 16px;
+      padding: 1.2rem 1.5rem; margin: 2rem 0;
+      font-size: 0.9rem; color: var(--text-secondary);
+    }
+    .tip strong { color: var(--text); }
+
+    .bottom {
+      margin-top: 3rem; padding-top: 2rem;
+      border-top: 1px solid var(--border-light);
+      text-align: center; color: var(--text-muted); font-size: 0.85rem;
+    }
+
+    .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      .container { padding: 2rem 1rem; }
+      .card { padding: 1.2rem; }
+      .hero { min-height: 35vh; }
+    }
+  </style>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">魏林桠</a>
+    <a href="learning.html" class="nav-back">← 返回学习主页</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="day-tag">DAY 14 · Prompt实战</div>
+    <h1>从需求到成品<br>写三个能直接用的Prompt</h1>
+    <p>学了框架，现在动手。写完这三个，你就有自己的prompt模板库了</p>
+  </div>
+</section>
+
+<div class="container">
+
+  <section class="reveal">
+    <span class="section-tag">先思考</span>
+    <h2 class="section-title">为什么实战比理论重要？</h2>
+    <div class="task-box">
+      <p>你看了十遍游泳教学视频，不下水还是不会游。</p>
+      <p style="margin-top: 1rem;">Prompt也一样。学了角色、背景、约束、CoT——但如果不亲手写一个完整的prompt去试，你永远不知道自己会在哪一步卡壳。</p>
+      <p style="margin-top: 1rem;">今天三个任务，覆盖产品经理最常见的三个场景。写完后存好，以后直接当模板用。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">任务一</span>
+    <h2 class="section-title">写一份竞品分析Prompt</h2>
+
+    <div class="card">
+      <p style="font-weight: 700; margin-bottom: 1rem;">场景：</p>
+      <p style="color: var(--text-secondary);">你负责一款新App的功能规划，需要快速了解市场上同类产品的功能差异。你手里只有产品名称，没有分析报告。</p>
+
+      <p style="font-weight: 700; margin: 1.2rem 0 0.5rem;">你的任务：</p>
+      <p style="color: var(--text-secondary);">用结构化五要素 + CoT，写一份prompt，让AI帮你生成一份可交付的竞品分析框架。要求：</p>
+      <ul style="margin: 0.8rem 0 0 1.2rem; color: var(--text-secondary);">
+        <li>指定竞品名称（选一个你熟悉的领域）</li>
+        <li>分析维度至少包含：核心功能、用户定位、差异化优势、明显短板</li>
+        <li>AI需要先用CoT拆解分析逻辑，再输出最终对比表（不，我们不输出表格——用分段文字对比）</li>
+        <li>约束：字数控制在800字以内，语言直接，不废话</li>
+      </ul>
+
+      <p style="font-weight: 700; margin: 1.2rem 0 0.5rem;">示例框架（不要照抄，自己重写）：</p>
+      <div class="prompt-box">
+        <span class="key">【角色】</span>你是一位资深产品分析师...（后面自己补全）<br><br>
+        <span class="key">【背景】</span>我们正在规划一款XX类App...（后面自己补全）<br><br>
+        <span class="key">【任务】</span>请分析以下竞品...（后面自己补全）<br><br>
+        <span class="key">【CoT要求】</span>先按以下步骤拆解你的分析逻辑，再给出结论...（后面自己补全）<br><br>
+        <span class="key">【约束】</span>字数...格式...风格...（后面自己补全）
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">任务二</span>
+    <h2 class="section-title">写一份用户调研问卷Prompt</h2>
+
+    <div class="card">
+      <p style="font-weight: 700; margin-bottom: 1rem;">场景：</p>
+      <p style="color: var(--text-secondary);">你要为一个新产品设计用户调研问卷，但你不确定问什么问题、怎么组织问卷结构。你学过设计调研，但问卷和产品调研是两套逻辑。</p>
+
+      <p style="font-weight: 700; margin: 1.2rem 0 0.5rem;">你的任务：</p>
+      <p style="color: var(--text-secondary);">写一份prompt，让AI生成一份结构化的用户调研问卷。要求：</p>
+      <ul style="margin: 0.8rem 0 0 1.2rem; color: var(--text-secondary);">
+        <li>指定目标产品和目标用户画像</li>
+        <li>问卷结构分三部分：筛选问题 + 核心需求问题 + 付费意愿问题</li>
+        <li>每个问题要注明"这个问题是在验证什么假设"</li>
+        <li>约束：总问题不超过15个，每道题给出选项或开放式引导</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">任务三</span>
+    <h2 class="section-title">写一份PRD大纲生成Prompt</h2>
+
+    <div class="card">
+      <p style="font-weight: 700; margin-bottom: 1rem;">场景：</p>
+      <p style="color: var(--text-secondary);">你刚接到一个需求，老板让你"写个PRD"。你脑子里只有一个模糊的想法，不知道怎么把想法变成结构化的产品文档。</p>
+
+      <p style="font-weight: 700; margin: 1.2rem 0 0.5rem;">你的任务：</p>
+      <p style="color: var(--text-secondary);">写一份prompt，让AI帮你从"一个模糊想法"生成一份PRD大纲。要求：</p>
+      <ul style="margin: 0.8rem 0 0 1.2rem; color: var(--text-secondary);">
+        <li>先描述你的"模糊想法"（越模糊越好，模拟真实场景）</li>
+        <li>AI需要先用CoT帮你澄清需求：目标用户是谁？核心场景是什么？最小功能集是什么？</li>
+        <li>然后输出PRD大纲：背景、目标、功能描述、验收标准</li>
+        <li>约束：PRD大纲要可以直接复制到飞书/石墨文档里使用，格式清晰</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">今日问题</span>
+    <h2 class="section-title">回答完算完成任务</h2>
+    <div class="question-block">
+      <h3>需要你回答的问题</h3>
+      <ul class="question-list">
+        <li data-num="01">把任务一的完整prompt发给我。选一个你熟悉的领域（比如设计工具、短视频App、AI产品）。</li>
+        <li data-num="02">三个任务里，哪一个让你卡壳了？卡在哪一步？（角色？背景？任务？约束？还是CoT？）</li>
+        <li data-num="03">如果你以后每天工作中只用一份prompt模板，你会选竞品分析、用户调研、还是PRD大纲？为什么？</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="tip reveal">
+    <strong>💡 提示</strong><br>
+    写prompt的时候不要追求完美。先写一版丢给AI试试，看输出效果，再回来调整约束。产品经理的prompt能力不是背出来的，是"写了→试了→改了三遍"练出来的。写完后把这三个prompt存到一个文件里，以后直接当模板用。
+  </div>
+
+  <div class="bottom reveal">
+    Day 14 · 想好了直接微信回复我，我等你 🖤
+  </div>
+
+</div>
+
+<script>
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+  });
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+
+</body>
+</html>
