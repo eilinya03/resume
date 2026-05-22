@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 16 · RAG入门：让AI回答专业问题</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+      --text-secondary: #4a5568; --text-muted: #718096;
+      --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+      --border: #e2e8f0; --border-light: #edf2f7;
+      --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.8;
+    }
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem;
+      transition: all 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+    }
+    .nav-inner {
+      max-width: 800px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-logo {
+      font-weight: 800; font-size: 0.9rem; color: var(--text); text-decoration: none;
+    }
+    .nav-back {
+      font-size: 0.8rem; color: var(--text-muted); text-decoration: none; font-weight: 500;
+      transition: color 0.3s;
+    }
+    .nav-back:hover { color: var(--accent); }
+
+    .hero {
+      min-height: 40vh; display: flex; align-items: center; justify-content: center;
+      padding-top: 80px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+      color: white; text-align: center;
+    }
+    .hero-content { max-width: 700px; padding: 0 2rem; }
+    .hero h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 900; margin-bottom: 0.6rem; }
+    .hero .day-tag {
+      display: inline-block; padding: 0.3rem 0.9rem; background: rgba(255,255,255,0.2);
+      border-radius: 50px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .hero p { font-size: 1rem; opacity: 0.85; }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+    .section-tag {
+      font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em;
+      text-transform: uppercase; font-weight: 700; margin-bottom: 0.6rem; display: block;
+    }
+    .section-title { font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.8rem; }
+    .section-desc { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow);
+      transition: all 0.3s;
+    }
+    .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .card + .card { margin-top: 1.2rem; }
+
+    .task-box {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: 16px; padding: 1.8rem; margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .question-block {
+      background: linear-gradient(135deg, rgba(79,70,229,0.04), rgba(236,72,153,0.04));
+      border: 1px solid rgba(79,70,229,0.15); border-radius: 16px;
+      padding: 1.5rem; margin: 2rem 0;
+    }
+    .question-block h3 {
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .question-block h3::before {
+      content: '💡'; font-size: 1.2rem;
+    }
+    .question-list { list-style: none; }
+    .question-list li {
+      padding: 0.7rem 0; border-bottom: 1px solid var(--border-light);
+      display: flex; align-items: flex-start; gap: 0.7rem; font-size: 0.95rem;
+    }
+    .question-list li:last-child { border-bottom: none; }
+    .question-list li::before {
+      content: attr(data-num); font-weight: 800; color: var(--accent); font-size: 0.85rem;
+      min-width: 24px; text-align: center; background: var(--bg); border-radius: 6px;
+      padding: 0.1rem 0;
+    }
+
+    .tip {
+      background: linear-gradient(135deg, #fff8e6, #fff0d6);
+      border: 1px solid #ffc53d; border-radius: 16px;
+      padding: 1.2rem 1.5rem; margin: 2rem 0;
+      font-size: 0.9rem; color: var(--text-secondary);
+    }
+    .tip strong { color: var(--text); }
+
+    .bottom {
+      margin-top: 3rem; padding-top: 2rem;
+      border-top: 1px solid var(--border-light);
+      text-align: center; color: var(--text-muted); font-size: 0.85rem;
+    }
+
+    .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      .container { padding: 2rem 1rem; }
+      .card { padding: 1.2rem; }
+      .hero { min-height: 35vh; }
+    }
+  </style>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">魏林桠</a>
+    <a href="learning.html" class="nav-back">← 返回学习主页</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="day-tag">DAY 16 · RAG入门</div>
+    <h1>RAG是什么<br>以及为什么你需要它</h1>
+    <p>让AI不只靠"猜测"回答你专业领域的问题</p>
+  </div>
+</section>
+
+<div class="container">
+
+  <section class="reveal">
+    <span class="section-tag">核心概念</span>
+    <h2 class="section-title">RAG：检索增强生成</h2>
+    <div class="task-box">
+      <p style="font-size: 1.05rem; margin-bottom: 1rem;"><strong>一句话解释：</strong></p>
+      <p>RAG就是让AI在回答你之前，先"查资料"——从你指定的资料库里找到相关内容，再结合这些内容生成答案。而不是靠训练数据里模糊的记忆"瞎编"。</p>
+
+      <p style="margin-top: 1.5rem; font-size: 1.05rem;"><strong>为什么工业设计师需要RAG？</strong></p>
+      <p>你让AI帮你分析龙门石窟的纹饰元素，如果AI靠训练数据回答，它可能会把北魏和唐代的风格混在一起。但如果你先把龙门石窟的考古资料、纹饰图谱喂给AI，AI就能基于<strong>你指定的准确资料</strong>回答。</p>
+
+      <p style="margin-top: 1.5rem; color: var(--text-muted);">RAG = 你自己的知识库 + AI的生成能力。不是AI变聪明了，是AI有了你的参考书。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">RAG的三种用法</span>
+    <h2 class="section-title">你会用到的三种RAG场景</h2>
+
+    <div class="card">
+      <p style="font-weight: 700; margin-bottom: 0.5rem;">场景一：个人知识库</p>
+      <p>你把毕设相关的论文、竞品分析、用户调研报告都丢进去。之后问"我的竞品分析和市场空白结论是什么"，AI直接从你的资料里提取，不会和其他项目混淆。</p>
+    </div>
+
+    <div class="card">
+      <p style="font-weight: 700; margin-bottom: 0.5rem;">场景二：领域专用问答</p>
+      <p>你要面试一家文创公司，把这家公司过去三年的产品线、财报、媒体报道都喂给AI。然后问"这家公司产品的迭代逻辑是什么"——AI基于这些资料回答，比你自己翻资料快十倍。</p>
+    </div>
+
+    <div class="card">
+      <p style="font-weight: 700; margin-bottom: 0.5rem;">场景三：实时信息补充</p>
+      <p>AI的训练数据有截止日期，它不知道昨天发布的新产品。RAG可以把最新的新闻、数据、行情实时接进来，让AI回答"现在"的问题。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">实战任务一</span>
+    <h2 class="section-title">设计一个"毕设知识库"的使用场景</h2>
+
+    <div class="task-box">
+      <p style="font-weight: 700; margin-bottom: 1rem;">假设你有一个RAG知识库，里面存了以下内容：</p>
+      <ul style="margin-left: 1.2rem; margin-bottom: 1.5rem; color: var(--text-secondary);">
+        <li>龙门石窟海外流失文物清单（20件）</li>
+        <li>你做的竞品分析报告（故宫/观复/三星堆）</li>
+        <li>用户调研问卷原始数据（100份）</li>
+        <li>工业设计师访谈记录（5人）</li>
+      </ul>
+
+      <p style="font-weight: 700; margin-bottom: 1rem;">任务：写出你会向这个知识库问的<strong>三个问题</strong>。</p>
+      <p style="color: var(--text-secondary);">要求：每个问题必须满足——<strong>如果不查资料，AI一定答错或答不准</strong>。这样才能体现RAG的价值。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">实战任务二</span>
+    <h2 class="section-title">对比：不用RAG vs 用RAG</h2>
+
+    <div class="task-box">
+      <p style="font-weight: 700; margin-bottom: 1rem;">针对同一个问题，写出两种答案的预期差异：</p>
+
+      <p style="margin-bottom: 0.5rem;"><strong>问题：</strong>"基于我的调研，工业设计师对文创茶具最大的不满是什么？"</p>
+
+      <p style="margin-top: 1rem; color: var(--text-secondary);"><strong>不用RAG时，AI可能会怎么答？</strong>（猜一猜）</p>
+      <p style="margin-top: 0.5rem; color: var(--text-secondary);"><strong>用RAG时（喂了5份访谈记录），AI应该怎么答？</strong>（基于事实）</p>
+
+      <p style="margin-top: 1.5rem; color: var(--text-muted);">这个任务不需要你真的运行，只需要你预判两者的差异。目的是理解"为什么需要RAG"。</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">实战任务三</span>
+    <h2 class="section-title">RAG的局限：它不能做什么？</h2>
+
+    <div class="task-box">
+      <p style="font-weight: 700; margin-bottom: 1rem;">RAG不是万能的。说出至少两个RAG做不到的、必须靠人做的事：</p>
+
+      <p style="color: var(--text-secondary);">提示：想想资料本身的问题——如果喂进去的资料是错的、不全的、有偏见的，RAG会怎么办？</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="section-tag">今日问题</span>
+    <h2 class="section-title">回答完算完成任务</h2>
+    <div class="question-block">
+      <h3>需要你回答的问题</h3>
+      <ul class="question-list">
+        <li data-num="01">任务一：写出你会向毕设知识库问的三个问题，每个问题必须体现"不查资料AI一定答不准"。</li>
+        <li data-num="02">任务二：针对"工业设计师对文创茶具最大的不满"，预判不用RAG和用RAG的答案差异。</li>
+        <li data-num="03">任务三：说出两个RAG做不到、必须靠人做的事。</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="tip reveal">
+    <strong>💡 提示</strong><br>
+    任务一的关键是"不查资料AI一定答不准"。如果你的问题比如"龙门石窟是什么"，AI不靠RAG也能答，那就白搭了。好的RAG问题是那种只有"你的专属资料"里才有的信息。
+  </div>
+
+  <div class="bottom reveal">
+    Day 16 · 想好了直接微信回复我，不赶时间 🖤
+  </div>
+
+</div>
+
+<script>
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+  });
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+
+</body>
+</html>
