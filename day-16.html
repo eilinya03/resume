@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 16 · RAG入门：让AI回答专业问题</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+  --text-secondary: #4a5568; --text-muted: #718096;
+  --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+  --border: #e2e8f0; --border-light: #edf2f7;
+  --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', 'Noto Sans SC', sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; }
+
+nav { position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s; }
+nav.scrolled { background: rgba(255,255,255,0.95); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-light); }
+.nav-inner { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+.nav-logo { font-weight: 800; font-size: 1rem; color: var(--text); text-decoration: none; }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.85rem; transition: color 0.3s; }
+.nav-links a:hover { color: var(--accent); }
+
+.hero { min-height: 35vh; display: flex; align-items: center; justify-content: center; padding-top: 80px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%); color: white; text-align: center; }
+.hero-content { max-width: 700px; padding: 0 2rem; }
+.hero h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); font-weight: 900; margin-bottom: 0.5rem; }
+.hero .meta { font-size: 0.85rem; opacity: 0.8; margin-bottom: 0.3rem; }
+.hero .meta span { margin: 0 0.5rem; }
+.status-badge { display: inline-block; padding: 0.2rem 0.8rem; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+
+section { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
+.section-tag { font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; margin-bottom: 0.8rem; display: block; }
+.section-title { font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.5rem; }
+.section-desc { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+
+.card { background: var(--surface); border: 1px solid var(--border-light); border-radius: 16px; padding: 2rem; box-shadow: var(--shadow); margin-bottom: 2rem; }
+.card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text); }
+.card p { margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.95rem; }
+.card p:last-child { margin-bottom: 0; }
+
+.story-box { background: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(236,72,153,0.06)); border: 1px solid rgba(79,70,229,0.15); border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 2rem; }
+.story-box h3 { font-size: 1rem; font-weight: 700; color: var(--accent); margin-bottom: 0.8rem; }
+.story-box p { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 0.8rem; }
+.story-box p:last-child { margin-bottom: 0; }
+
+.task-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: 16px; padding: 2rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+.task-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
+.task-num { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-warm)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+.task-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.task-desc { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; }
+.task-desc strong { color: var(--text); }
+
+.hint-box { background: var(--bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 1rem 1.2rem; margin-top: 1rem; }
+.hint-box .hint-label { font-size: 0.75rem; font-weight: 700; color: var(--accent); margin-bottom: 0.3rem; }
+.hint-box p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+.cta-box { background: linear-gradient(135deg, var(--accent), var(--accent-warm)); border-radius: 16px; padding: 2rem; color: white; text-align: center; margin-top: 2rem; }
+.cta-box h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+.cta-box p { opacity: 0.9; font-size: 0.9rem; margin-bottom: 1.2rem; }
+
+.mindmap-fallback { background: var(--surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem; }
+.mindmap-fallback h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.8rem; color: var(--text); }
+.mindmap-fallback ul { list-style: none; padding: 0; }
+.mindmap-fallback li { padding: 0.4rem 0; font-size: 0.85rem; color: var(--text-secondary); border-bottom: 1px solid var(--border-light); }
+.mindmap-fallback li:last-child { border-bottom: none; }
+
+.reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+.nav-day { display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; }
+.nav-day a { padding: 0.5rem 1rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; color: white; text-decoration: none; font-size: 0.8rem; font-weight: 500; transition: all 0.3s; }
+.nav-day a:hover { background: rgba(255,255,255,0.2); }
+
+@media (max-width: 768px) { section { padding: 2rem 1rem; } .card { padding: 1.2rem; } .nav-links { display: none; } }
+</style>
+</head>
+<body>
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="learning.html" class="nav-logo">← 学习主页</a>
+    <ul class="nav-links">
+      <li><a href="#story">问题</a></li>
+      <li><a href="#decrypt">解密</a></li>
+      <li><a href="#tasks">任务</a></li>
+    </ul>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="meta">Day 16 <span>·</span> 第一阶段 <span>·</span> RAG与AI应用架构</div>
+    <h1>RAG入门：让AI回答专业问题</h1>
+    <span class="status-badge">⏳ 等待完成</span>
+    <div class="nav-day">
+      <a href="day-15.html">◀ Day 15</a>
+      <a href="day-17.html">Day 17 ▶</a>
+    </div>
+  </div>
+</section>
+
+<!-- 问题引入 -->
+<section id="story" class="reveal">
+  <span class="section-tag">Problem</span>
+  <h2 class="section-title">AI什么都懂，但关键时刻总掉链子</h2>
+  <div class="story-box">
+    <p>你正在设计一款法律咨询助手。用户问："我租的房子到期了，房东不退押金，怎么办？"</p>
+    <p>通用大模型（比如GPT）能侃侃而谈，告诉你民法典第几条、租客有什么权利、怎么协商。但问题是——每个城市的具体规定不同，比如北京和上海对押金的处理方式就有细微差别。而且GPT的训练数据有截止日期，它可能引用已经作废的条例。</p>
+    <p>更麻烦的是，用户如果追问："我们合同里写了'提前退租扣两个月押金'，这合法吗？"GPT可能会给出一个看起来合理但不一定符合最新司法解释的回答。</p>
+    <p><strong>这就是产品经理的噩梦：AI看起来什么都知道，但在专业领域里，"看起来对"和"真的对"之间差着十万八千里。</strong></p>
+  </div>
+</section>
+
+<!-- 知识解密 -->
+<section id="decrypt" class="reveal">
+  <span class="section-tag">Knowledge</span>
+  <h2 class="section-title">RAG：给AI配一个"实时图书馆"</h2>
+  <div class="card">
+    <p>大模型就像一个读过全世界图书馆但记忆停留在某个时间点的天才。它博览群书，但新书出版了它不知道，公司内部的规章制度它没见过，你个人的病历它更不可能了解。</p>
+    <p>RAG（Retrieval-Augmented Generation，检索增强生成）就是解决这个问题的思路。它的逻辑很简单：不要让AI靠"记忆"回答问题，而是让它先"查资料"再回答。</p>
+    <p>具体过程像是这样。用户问了一个问题，系统先去一个专门的数据库里搜索相关资料，把这些资料作为"上下文"一起塞进问题里，然后再让大模型生成回答。这样一来，AI的回答就有了出处，而且是基于最新、最相关的资料。</p>
+    <p>这个"专门的数据库"通常不是传统的关系型数据库（比如MySQL），而是向量数据库。因为传统数据库只能按关键词精确匹配，而向量数据库可以理解语义——你搜"房东不退押金"，它也能找到"租赁押金纠纷"相关的文档，即使关键词不完全一样。</p>
+  </div>
+
+  <div class="card">
+    <h3>类比：从闭卷考试到开卷考试</h3>
+    <p>传统大模型像是闭卷考试。学生只能凭记忆答题，记错了就是错了。RAG像是开卷考试，学生先翻书找到相关章节，然后结合自己的理解来回答。答案的质量取决于两个因素：一是找资料的能力（检索），二是阅读理解并组织语言的能力（生成）。</p>
+    <p>对产品经理来说，这意味着两件事。第一，AI产品的效果不再完全取决于模型本身的智商，而是取决于你给它准备了什么样的"参考资料"。第二，用户问题的专业程度越高，"资料库"的质量就越关键。</p>
+  </div>
+
+  <div class="card">
+    <h3>RAG不是万能药</h3>
+    <p>一个常见的误区是：只要上了RAG，AI就能回答所有专业问题。但这里有一个隐性前提——你的资料库里得有答案。如果用户问的是一个全新的场景，而数据库里没有任何相关文档，RAG也救不了。</p>
+    <p>还有一个更隐蔽的问题：RAG可能会"过度自信"。系统检索到了五篇文档，但其中最相关的那篇其实是过时的。AI会把它和其他文档混在一起，生成一个看似综合了各方观点但实际上混淆了新旧信息的回答。产品经理需要设计机制来标注信息的时效性和来源可信度。</p>
+  </div>
+</section>
+
+<!-- 今日任务 -->
+<section id="tasks" class="reveal">
+  <span class="section-tag">Today's Mission</span>
+  <h2 class="section-title">三个问题，没有标准答案</h2>
+  <p class="section-desc">下面这三个问题没有对错。重点是你怎么拆解、怎么假设、怎么验证。</p>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-num">1</div>
+      <div class="task-title">选型判断：什么时候需要RAG？</div>
+    </div>
+    <div class="task-desc">
+      <p>你正在评估三个功能，判断哪个最需要RAG：</p>
+      <p><strong>A. 电商客服机器人</strong>——用户问"这个充电宝能带上飞机吗？"</p>
+      <p><strong>B. 企业内部知识库问答</strong>——员工问"今年的年假政策是什么？"</p>
+      <p><strong>C. 智能写作助手</strong>——用户说"帮我写一封辞职信"</p>
+      <p>你的任务是：挑出最需要RAG的一个，说出理由。然后挑出最不需要RAG的一个，也说出理由。</p>
+      <p><strong>关键提示：不要只比较"准确率"。想想用户答错了分别会有什么后果，以及信息的更新频率。</strong></p>
+    </div>
+  </div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-num">2</div>
+      <div class="task-title">RAG的副作用</div>
+    </div>
+    <div class="task-desc">
+      <p>一个法律AI助手使用了RAG，资料库里有1000份各地法院的判例。一位用户问："我被人打了，对方该赔多少？"</p>
+      <p>系统检索到了三份判例：A案（赔偿5万）、B案（赔偿30万）、C案（赔偿2000元）。RAG把三份判例都喂给了大模型，AI回答："根据类似案例，赔偿金额在2000元到30万元之间，具体取决于伤情鉴定结果。"</p>
+      <p><strong>这个回答有什么问题？如果你是产品经理，你会怎么设计来避免这类问题？</strong></p>
+      <p>思考方向：用户真正想问的是什么？三份判例的"相似度"是否一样？AI的回答对用户做决策有帮助吗？</p>
+    </div>
+  </div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-num">3</div>
+      <div class="task-title">一句话说服</div>
+    </div>
+    <div class="task-desc">
+      <p>你的老板（非技术背景）问你："RAG听起来挺复杂的，我们用不上吧？我们的AI客服直接接GPT-4，效果已经很好了。"</p>
+      <p><strong>用一句话（最多两句）说服他为什么RAG值得投入。</strong></p>
+      <p>限制：不能说"技术更先进"或"行业趋势"这种虚词。必须用一个具体场景或具体风险来说明。</p>
+    </div>
+  </div>
+</section>
+
+<section class="reveal">
+  <span class="section-tag">Mind Map</span>
+  <h2 class="section-title">今日知识图谱</h2>
+  <div class="mindmap-fallback">
+    <h4>RAG核心概念</h4>
+    <ul>
+      <li><strong>检索（Retrieval）</strong>——从资料库找到相关内容，相当于"翻书找资料"</li>
+      <li><strong>增强（Augmented）</strong>——把检索到的内容作为上下文增强输入</li>
+      <li><strong>生成（Generation）</strong>——大模型基于上下文生成回答</li>
+      <li><strong>向量数据库</strong>——用语义理解代替关键词匹配，支持"意思相近"的搜索</li>
+      <li><strong>适用场景</strong>——专业领域、信息频繁更新、答案需要出处</li>
+      <li><strong>不适用场景</strong>——通用写作、创意生成、已有明确知识边界的问题</li>
+      <li><strong>产品经理关注点</strong>——资料库质量、信息时效性、检索精度、用户决策风险</li>
+    </ul>
+  </div>
+</section>
+
+<section class="reveal">
+  <span class="section-tag">Resources</span>
+  <h2 class="section-title">延伸资源</h2>
+  <div class="card">
+    <p><strong>视频推荐</strong></p>
+    <p>B站搜索"RAG 检索增强生成"，找播放量高的入门视频。重点理解"为什么需要RAG"和"RAG解决了什么问题"，不需要深入代码实现。</p>
+    <p style="margin-top:1rem"><strong>产品案例</strong></p>
+    <p>试着用一下以下产品，体会它们是不是在用RAG：Notion AI（问关于你笔记里的内容）、Kimi Chat（上传文档后提问）、钉钉魔法棒（问企业内部知识）。</p>
+  </div>
+</section>
+
+<div class="cta-box">
+  <h3>📬 完成后微信回复</h3>
+  <p>答完上面三个问题，直接在微信里说"学完了"或发送你的思考。我会出题考你，评分标准是你的思考过程，不是知识记忆。</p>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+</body>
+</html>
