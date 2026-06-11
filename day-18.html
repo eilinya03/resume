@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 18 · AI应用架构：一个AI产品背后是什么</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+  --text-secondary: #4a5568; --text-muted: #718096;
+  --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+  --border: #e2e8f0; --border-light: #edf2f7;
+  --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', 'Noto Sans SC', sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; }
+
+nav { position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s; }
+nav.scrolled { background: rgba(255,255,255,0.95); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-light); }
+.nav-inner { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+.nav-logo { font-weight: 800; font-size: 1rem; color: var(--text); text-decoration: none; }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.85rem; transition: color 0.3s; }
+.nav-links a:hover { color: var(--accent); }
+
+.hero { min-height: 35vh; display: flex; align-items: center; justify-content: center; padding-top: 80px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%); color: white; text-align: center; }
+.hero-content { max-width: 700px; padding: 0 2rem; }
+.hero h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); font-weight: 900; margin-bottom: 0.5rem; }
+.hero .meta { font-size: 0.85rem; opacity: 0.8; margin-bottom: 0.3rem; }
+.hero .meta span { margin: 0 0.5rem; }
+.status-badge { display: inline-block; padding: 0.2rem 0.8rem; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+
+section { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
+.section-tag { font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; margin-bottom: 0.8rem; display: block; }
+.section-title { font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.5rem; }
+.section-desc { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+
+.card { background: var(--surface); border: 1px solid var(--border-light); border-radius: 16px; padding: 2rem; box-shadow: var(--shadow); margin-bottom: 2rem; }
+.card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text); }
+.card p { margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.95rem; }
+.card p:last-child { margin-bottom: 0; }
+
+.story-box { background: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(236,72,153,0.06)); border: 1px solid rgba(79,70,229,0.15); border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 2rem; }
+.story-box h3 { font-size: 1rem; font-weight: 700; color: var(--accent); margin-bottom: 0.8rem; }
+.story-box p { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 0.8rem; }
+.story-box p:last-child { margin-bottom: 0; }
+
+.task-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: 16px; padding: 2rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+.task-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
+.task-num { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-warm)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+.task-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.task-desc { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; }
+.task-desc strong { color: var(--text); }
+
+.hint-box { background: var(--bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 1rem 1.2rem; margin-top: 1rem; }
+.hint-box .hint-label { font-size: 0.75rem; font-weight: 700; color: var(--accent); margin-bottom: 0.3rem; }
+.hint-box p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+.cta-box { background: linear-gradient(135deg, var(--accent), var(--accent-warm)); border-radius: 16px; padding: 2rem; color: white; text-align: center; margin-top: 2rem; }
+.cta-box h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+.cta-box p { opacity: 0.9; font-size: 0.9rem; margin-bottom: 1.2rem; }
+
+.mindmap-fallback { background: var(--surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem; }
+.mindmap-fallback h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.8rem; color: var(--text); }
+.mindmap-fallback ul { list-style: none; padding: 0; }
+.mindmap-fallback li { padding: 0.4rem 0; font-size: 0.85rem; color: var(--text-secondary); border-bottom: 1px solid var(--border-light); }
+.mindmap-fallback li:last-child { border-bottom: none; }
+
+.reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+.nav-day { display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; }
+.nav-day a { padding: 0.5rem 1rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; color: white; text-decoration: none; font-size: 0.8rem; font-weight: 500; transition: all 0.3s; }
+.nav-day a:hover { background: rgba(255,255,255,0.2); }
+
+@media (max-width: 768px) { section { padding: 2rem 1rem; } .card { padding: 1.2rem; } .nav-links { display: none; } }
+</style>
+</head>
+<body>
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="learning.html" class="nav-logo">← 学习主页</a>
+    <ul class="nav-links">
+      <li><a href="#story">问题</a></li>
+      <li><a href="#decrypt">解密</a></li>
+      <li><a href="#tasks">任务</a></li>
+    </ul>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="meta">Day 18 <span>·</span> 第一阶段 <span>·</span> RAG与AI应用架构</div>
+    <h1>AI应用架构：一个AI产品背后是什么</h1>
+    <span class="status-badge">⏳ 等待完成</span>
+    <div class="nav-day">
+      <a href="day-17.html">◀ Day 17</a>
+      <a href="day-19.html">Day 19 ▶</a>
+    </div>
+  </div>
+</section>
+
+<!-- 问题引入 -->
+<section id="story" class="reveal">
+  <span class="section-tag">Problem</span>
+  <h2 class="section-title">为什么AI产品总是慢、贵、还偶尔崩溃？</h2>
+  <div class="story-box">
+    <p>你设计的法律咨询助手上线了。用户问了一个问题，等了8秒才出答案。第二个用户同时提问，系统直接卡住了。第三个用户问完问题，发现上个月的答案和这个月不一样——因为AI模型版本更新了。</p>
+    <p>技术团队跟你解释说："大模型API调用一次要2-3秒，并发一高就排队。而且模型提供商更新了版本，我们还没来得及测试，就自动切换了。"</p>
+    <p><strong>你作为产品经理，这时候需要做一个判断：这是技术问题，还是产品设计问题？</strong></p>
+    <p>答案是：技术问题背后，全是产品设计问题。AI的"慢"可以通过缓存设计来缓解，"贵"可以通过模型分层来控制，"崩溃"可以通过降级策略来兜底。这些不是算法工程师的专属领域，而是产品经理必须参与的架构决策。</p>
+  </div>
+</section>
+
+<!-- 知识解密 -->
+<section id="decrypt" class="reveal">
+  <span class="section-tag">Knowledge</span>
+  <h2 class="section-title">AI产品的三层架构</h2>
+  <div class="card">
+    <p>一个完整的AI产品，背后通常有<strong>三层</strong>。产品经理不需要写代码，但需要知道每一层在做什么，以及在每一层出问题时，用户会感知到什么。</p>
+    <p><strong>第一层：接入层。</strong>用户输入问题，系统先做预处理——清洗、格式化、敏感词过滤。这一层决定了用户说什么话会被拒绝。比如用户输入了攻击性语言，是在这里被拦截的。产品经理要定义拦截规则。</p>
+    <p><strong>第二层：逻辑层。</strong>系统判断这个问题应该走哪条路。是直接用大模型回答？还是先走RAG检索资料？还是调用某个外部API？这里有一个关键概念叫"路由"——不同的问题走不同的处理通道。产品经理要定义路由规则。</p>
+    <p><strong>第三层：生成层。</strong>大模型真正生成回答的地方。这里涉及到选哪个模型（GPT-4？Claude？国产模型？）、怎么控制输出长度、怎么设置温度参数（让回答更保守还是更发散）。产品经理要定义生成策略。</p>
+  </div>
+
+  <div class="card">
+    <h3>产品经理最关心的三个成本</h3>
+    <p><strong>时间成本。</strong>大模型API调用通常需要2-5秒。如果每次用户提问都实时调用，体验就是"慢"。解决方案是缓存——常见问题和答案预先缓存，用户再问到同样问题时直接返回。产品经理要定义哪些问题值得缓存，以及缓存多久失效。</p>
+    <p><strong>金钱成本。</strong>大模型API是按token计费的。一个1000字的回答，可能消耗几毛钱的API成本。如果产品免费，用户问得越多，亏得越多。解决方案是模型分层——简单问题用便宜的小模型，复杂问题用贵的大模型。产品经理要定义"简单"和"复杂"的边界。</p>
+    <p><strong>稳定性成本。</strong>大模型API偶尔不可用，或者返回乱码。如果系统没有任何兜底，用户看到的就是一片空白或一段胡言乱语。解决方案是降级策略——API失败时返回预设的标准答案，或者引导用户稍后再试。产品经理要定义降级时的用户体验。</p>
+  </div>
+
+  <div class="card">
+    <h3>版本管理：AI产品的隐形杀手</h3>
+    <p>传统软件更新，产品经理发版，测试团队验证，没问题再上线。AI产品的问题是：模型提供商可能在你不知情的时候更新了模型版本。昨天回答正确的答案，今天可能变了。</p>
+    <p>这意味着产品经理需要一套"回归测试"机制——定期用一批标准问题测试当前模型的回答，监控答案质量是否稳定。如果新版本的模型回答明显变差，需要回退或调整prompt。</p>
+    <p>更隐蔽的是，不同用户可能随机命中不同版本的模型（因为A/B测试或灰度发布）。同一个问题，用户A和用户B可能得到不同答案。产品经理需要定义版本切换的策略，以及不同版本之间的一致性要求。</p>
+  </div>
+</section>
+
+<!-- 今日任务 -->
+<section id="tasks" class="reveal">
+  <span class="section-tag">Today's Mission</span>
+  <h2 class="section-title">三个问题，没有标准答案</h2>
+  <p class="section-desc">下面这三个问题没有对错。重点是你怎么拆解、怎么假设、怎么验证。</p>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-num">1</div>
+      <div class="task-title">选型判断：缓存设计</div>
+    </div>
+    <div class="task-desc">
+      <p>你的法律咨询助手，用户经常重复问几个高频问题："加班工资怎么算？""试用期离职需要提前几天通知？""房东不退押金怎么办？"</p>
+      <p>技术团队问你：要不要给这些高频问题做缓存？缓存的好处是回答快、不花钱。坏处是如果政策变了，缓存里的答案还是旧的。</p>
+      <p><strong>你的决策是什么？做不做缓存？如果做，缓存多久更新一次？</strong></p>
+      <p>关键提示：想想"答得快但可能过时"和"答得慢但一定准确"，用户对这两者的容忍度分别是多少？</p>
+    </div>
+  </div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-num">2</div>
+      <div class="task-title">模型分层：什么时候用小模型？</div>
+    </div>
+    <div class="task-desc">
+      <p>你的产品有GPT-4（贵但强）和GPT-3.5（便宜但弱）两个模型可选。团队资源有限，不可能所有问题都用GPT-4。</p>
+      <p><strong>你会怎么设计"路由规则"——什么样的问题用GPT-4，什么样的问题用GPT-3.5？</strong></p>
+      <p>给你三个真实问题，你来分配模型：</p>
+      <p><strong>A.</strong> "你好"（用户打招呼）</p>
+      <p><strong>B.</strong> "我合同里有这条条款，如果违约要赔多少？"（附了一份合同截图）</p>
+      <p><strong>C.</strong> "你们公司地址在哪里？"（这是产品的通用FAQ）</p>
+      <p>思考方向：不只是看问题难度，还要看"答错了有没有风险"、"是不是可以用预置答案替代"。</p>
+    </div>
+  </div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-num">3</div>
+      <div class="task-title">一句话说服</div>
+    </div>
+    <div class="task-desc">
+      <p>你的老板想省钱，说："我们所有问题都用GPT-3.5算了，GPT-4太贵了。用户看不出来区别的。"</p>
+      <p><strong>用一句话（最多两句）说服他为什么必须保留GPT-4给某些场景。</strong></p>
+      <p>限制：不能说"GPT-4效果更好"这种虚词。必须用一个具体场景或具体风险来说明。</p>
+    </div>
+  </div>
+</section>
+
+<section class="reveal">
+  <span class="section-tag">Mind Map</span>
+  <h2 class="section-title">今日知识图谱</h2>
+  <div class="mindmap-fallback">
+    <h4>AI应用架构核心概念</h4>
+    <ul>
+      <li><strong>接入层</strong>——用户输入预处理、敏感词过滤、格式校验</li>
+      <li><strong>逻辑层</strong>——路由决策：走RAG？直接调用大模型？调用外部API？</li>
+      <li><strong>生成层</strong>——模型选择、输出控制、温度参数、长度限制</li>
+      <li><strong>缓存策略</strong>——缓存高频问题、设置失效时间、权衡速度与准确性</li>
+      <li><strong>模型分层</strong>——简单问题用小模型，复杂问题用大模型，预置答案替代通用问题</li>
+      <li><strong>降级策略</strong>——API失败时返回预设答案，避免用户看到空白或乱码</li>
+      <li><strong>版本管理</strong>——监控模型版本变化，做回归测试，保证答案一致性</li>
+      <li><strong>产品经理的角色</strong>——定义规则、权衡成本、设计用户体验、控制风险边界</li>
+    </ul>
+  </div>
+</section>
+
+<section class="reveal">
+  <span class="section-tag">Resources</span>
+  <h2 class="section-title">延伸资源</h2>
+  <div class="card">
+    <p><strong>产品体验</strong></p>
+    <p>打开 ChatGPT 或 Kimi Chat，尝试问同一个问题两次。第二次是否回答得更快？这就是缓存的效果。再尝试问一个复杂的专业问题，观察回答时间是否明显变长。</p>
+    <p style="margin-top:1rem"><strong>思考练习</strong></p>
+    <p>找一个你常用的APP，想想它有没有"缓存"和"降级"的设计。比如淘宝搜索失败时显示什么？微博加载慢时怎么提示？这些体验设计都是产品经理的决策。</p>
+  </div>
+</section>
+
+<div class="cta-box">
+  <h3>📬 完成后微信回复</h3>
+  <p>答完上面三个问题，直接在微信里说"学完了"或发送你的思考。我会出题考你，评分标准是你的思考过程，不是知识记忆。</p>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+</body>
+</html>
