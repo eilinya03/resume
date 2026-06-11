@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魏林桠的AI产品学习之旅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+            --text-secondary: #4a5568; --text-muted: #718096;
+            --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+            --border: #e2e8f0; --border-light: #edf2f7;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.7; overflow-x: hidden;
+        }
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s;
+        }
+        nav.scrolled {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-light); padding: 0.8rem 2rem;
+        }
+        .nav-inner { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-weight: 800; font-size: 1rem; color: var(--text); text-decoration: none; }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.85rem; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--accent); }
+
+        .hero {
+            min-height: 45vh; display: flex; align-items: center; justify-content: center;
+            padding-top: 80px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+            color: white; text-align: center;
+        }
+        .hero-content { max-width: 700px; padding: 0 2rem; }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 900; margin-bottom: 0.8rem; }
+        .hero p { font-size: 1rem; opacity: 0.85; margin-bottom: 2rem; }
+        .progress-row { display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; }
+        .progress-item { text-align: center; }
+        .progress-num { font-size: 2.5rem; font-weight: 800; line-height: 1; }
+        .progress-label { font-size: 0.7rem; opacity: 0.7; margin-top: 0.3rem; }
+
+        section { max-width: 900px; margin: 0 auto; padding: 4rem 2rem; }
+        .section-tag {
+            font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em;
+            text-transform: uppercase; font-weight: 700; margin-bottom: 0.8rem; display: block;
+        }
+        .section-title { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.5rem; }
+        .section-desc { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+
+        .card {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow);
+        }
+
+        /* ===== 知识树 ===== */
+        .mindmap-container {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 1.5rem; box-shadow: var(--shadow);
+            overflow-x: auto; margin-bottom: 1rem;
+        }
+        .mindmap-note {
+            text-align: center; color: var(--text-secondary); font-size: 0.85rem;
+            padding: 0.8rem 1.5rem; background: var(--bg); border-radius: 12px; border: 1px solid var(--border-light);
+        }
+
+        /* ===== 日历 ===== */
+        .calendar-wrapper {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 1.5rem; box-shadow: var(--shadow);
+        }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .calendar-title { font-size: 1.1rem; font-weight: 700; }
+        .calendar-nav button {
+            padding: 0.4rem 0.8rem; border: 1px solid var(--border); background: var(--surface);
+            border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s;
+        }
+        .calendar-nav button:hover { background: var(--accent); color: white; border-color: var(--accent); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; }
+        .calendar-day-header {
+            text-align: center; padding: 0.6rem 0.2rem; font-size: 0.8rem;
+            color: var(--text-muted); font-weight: 600;
+        }
+        .calendar-day {
+            min-height: 70px; padding: 0.5rem; border: 1px solid var(--border-light);
+            border-radius: 10px; transition: all 0.3s; position: relative; background: var(--surface);
+            text-decoration: none; color: inherit; display: block;
+        }
+        .calendar-day:hover { border-color: var(--accent-light); transform: translateY(-2px); box-shadow: var(--shadow); }
+        .calendar-day-number { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; }
+        .calendar-day-content {
+            font-size: 0.65rem; color: var(--text-muted); line-height: 1.3;
+            overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        }
+        .calendar-day.today { border-color: var(--accent); background: rgba(79,70,229,0.05); }
+        .calendar-day.today .calendar-day-number { color: var(--accent); }
+        .calendar-day.completed { border-color: var(--success); background: rgba(16,185,129,0.05); }
+        .calendar-day.completed::after {
+            content: '✓'; position: absolute; top: 0.3rem; right: 0.3rem;
+            color: var(--success); font-weight: 700; font-size: 0.8rem;
+        }
+        .calendar-day.late { border-color: var(--danger); background: rgba(239,68,68,0.05); }
+        .calendar-day.late::after {
+            content: '!'; position: absolute; top: 0.3rem; right: 0.3rem;
+            color: var(--danger); font-weight: 700; font-size: 0.8rem;
+        }
+        .calendar-legend {
+            display: flex; gap: 1.5rem; margin-top: 1rem;
+            justify-content: center; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted);
+        }
+        .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 3px; border: 2px solid; }
+
+        /* ===== 阶段计划 ===== */
+        .phase-card {
+            background: var(--surface); border: 1px solid var(--border-light);
+            border-radius: 16px; padding: 1.8rem; margin-bottom: 1.2rem; box-shadow: var(--shadow);
+        }
+        .phase-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+        .phase-title { font-size: 1.05rem; font-weight: 700; }
+        .phase-duration { padding: 0.2rem 0.7rem; background: var(--bg); border-radius: 20px; font-size: 0.72rem; color: var(--text-muted); }
+        .phase-progress { height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-bottom: 1rem; }
+        .phase-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-warm)); border-radius: 3px; transition: width 1s; }
+        .lesson-list { list-style: none; }
+        .lesson-item {
+            display: flex; align-items: flex-start; gap: 0.8rem;
+            padding: 0.8rem 0; border-bottom: 1px solid var(--border-light);
+        }
+        .lesson-item:last-child { border-bottom: none; }
+        .lesson-status {
+            width: 20px; height: 20px; border-radius: 5px; display: flex;
+            align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.15rem;
+            font-size: 0.7rem;
+        }
+        .lesson-status.todo { border: 2px solid var(--border); }
+        .lesson-status.done { background: var(--success); color: white; border: 2px solid var(--success); }
+        .lesson-content { flex: 1; }
+        .lesson-title { font-weight: 600; font-size: 0.9rem; color: var(--text); margin-bottom: 0.2rem; }
+        .lesson-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; }
+        .lesson-meta { display: flex; gap: 0.4rem; margin-top: 0.3rem; flex-wrap: wrap; }
+        .lesson-tag {
+            padding: 0.15rem 0.5rem; background: var(--bg); border-radius: 4px;
+            font-size: 0.68rem; color: var(--text-muted); border: 1px solid var(--border-light);
+        }
+
+        /* ===== 今日入口 ===== */
+        .today-cta {
+            background: linear-gradient(135deg, var(--accent), var(--accent-warm));
+            border-radius: 16px; padding: 2rem; color: white; text-align: center;
+        }
+        .today-cta h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .today-cta p { opacity: 0.9; font-size: 0.9rem; margin-bottom: 1.2rem; }
+        .btn-white {
+            background: white; color: var(--accent); padding: 0.7rem 1.8rem;
+            border-radius: 50px; text-decoration: none; font-weight: 700;
+            display: inline-block; transition: all 0.3s;
+        }
+        .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .calendar-grid { gap: 0.3rem; }
+            .calendar-day { min-height: 55px; padding: 0.3rem; }
+            .calendar-day-content { -webkit-line-clamp: 1; }
+            .phase-header { flex-direction: column; }
+            .progress-row { gap: 2rem; }
+            section { padding: 3rem 1rem; }
+            .card { padding: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">← 返回简历</a>
+            <ul class="nav-links">
+                <li><a href="#knowledge-tree">知识树</a></li>
+                <li><a href="#calendar">日历</a></li>
+                <li><a href="#today">今日任务</a></li>
+                <li><a href="#phases">阶段计划</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>AI产品学习之旅</h1>
+            <p>从产品设计到AI产品经理的转型记录 · 每日学习 · 每周复盘</p>
+            <div class="progress-row">
+                <div class="progress-item">
+                    <div class="progress-num" id="totalProgress">0%</div>
+                    <div class="progress-label">总进度</div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-num" id="completedDays">0</div>
+                    <div class="progress-label">已完成天数</div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-num" id="avgScore">--</div>
+                    <div class="progress-label">平均得分</div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-num">84</div>
+                    <div class="progress-label">计划总天数</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 学习理念 -->
+    <section class="reveal" style="margin-bottom: -2rem;">
+        <div style="background: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(236,72,153,0.06)); border: 1px solid rgba(79,70,229,0.15); border-radius: 16px; padding: 1.5rem 2rem; max-width: 900px; margin: 0 auto;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent); margin-bottom: 0.6rem; letter-spacing: 0.05em;">🧠 学习理念</div>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.8;">
+                这个学习计划不做"知识灌输"。每天给你一个<strong>没有标准答案的真实问题</strong>，给你一些互相矛盾的线索，逼你自己走一遍"发现问题→拆解问题→验证假设"的完整思考流程。产品经理的核心素养不是记住答案，是能在模糊中做判断。
+            </p>
+        </div>
+    </section>
+
+    <!-- 知识树 -->
+    <section id="knowledge-tree" class="reveal">
+        <span class="section-tag">Knowledge Map</span>
+        <h2 class="section-title">AI产品经理 · 知识全景图</h2>
+        <p class="section-desc">7大知识域 · 84天全覆盖 · 每天锚定一个开放性问题</p>
+        <div class="mindmap-container">
+            <div class="mermaid">
+graph TD
+    Root[🎯 AI产品经理] --> A[01 产品思维<br/>Week 1-2]
+    Root --> B[02 技术直觉<br/>Week 3-4]
+    Root --> C[03 产品方法论<br/>Week 5-6]
+    Root --> D[04 数据与工程<br/>Week 7-8]
+    Root --> E[05 行业赛道<br/>Week 9-10]
+    Root --> F[06 设计实战<br/>Week 11-12]
+    Root --> G[07 求职冲刺<br/>持续]
+    A --> A1[什么是AI PM]
+    A --> A2[AI vs 传统PM]
+    A --> A3[Copilot/Agent分类]
+    A --> A4[核心指标与误区]
+    B --> B1[大模型直觉]
+    B --> B2[Prompt工程]
+    B --> B3[RAG查字典]
+    B --> B4[Agent多模态]
+    B --> B5[能力边界]
+    C --> C1[AI需求分析]
+    C --> C2[何时用AI]
+    C --> C3[AI交互设计]
+    C --> C4[评估体系]
+    D --> D1[训练/反馈数据]
+    D --> D2[数据标注]
+    D --> D3[与算法协作]
+    D --> D4[Python产品视角]
+    E --> E1[AI+办公]
+    E --> E2[AI+教育]
+    E --> E3[AIGC赛道]
+    E --> E4[竞品分析框架]
+    E --> E5[商业模式]
+    F --> F1[从0设计AI功能]
+    F --> F2[AI产品PRD]
+    F --> F3[毕业设计]
+    G --> G1[简历优化]
+    G --> G2[面试10题]
+    G --> G3[模拟面试]
+    style Root fill:#4f46e5,stroke:none,color:#fff
+    style A fill:#818cf8,stroke:none,color:#fff
+    style B fill:#ec4899,stroke:none,color:#fff
+    style C fill:#10b981,stroke:none,color:#fff
+    style D fill:#f59e0b,stroke:none,color:#fff
+    style E fill:#6366f1,stroke:none,color:#fff
+    style F fill:#8b5cf6,stroke:none,color:#fff
+    style G fill:#4f46e5,stroke:none,color:#fff
+            </div>
+        </div>
+        <div class="mindmap-note">
+            <p>📌 <strong>当前位置：Day 16 · RAG入门：让AI回答专业问题</strong> · 点击下方日历或今日任务开始学习</p>
+        </div>
+    </section>
+
+    <!-- 日历 -->
+    <section id="calendar" class="reveal">
+        <span class="section-tag">Calendar</span>
+        <div class="calendar-wrapper">
+            <div class="calendar-header">
+                <h2 class="calendar-title">📅 学习日历</h2>
+                <div class="calendar-nav">
+                    <button onclick="changeMonth(-1)">◀</button>
+                    <span id="currentMonth">2026年4月</span>
+                    <button onclick="changeMonth(1)">▶</button>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="calendar-legend">
+                <div class="legend-item"><div class="legend-dot" style="border-color:var(--success); background:rgba(16,185,129,0.1);"></div><span>已完成</span></div>
+                <div class="legend-item"><div class="legend-dot" style="border-color:var(--accent); background:rgba(79,70,229,0.1);"></div><span>今天</span></div>
+                <div class="legend-item"><div class="legend-dot" style="border-color:var(--danger); background:rgba(239,68,68,0.1);"></div><span>未完成</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 今日入口 -->
+    <section id="today" class="reveal">
+        <div class="today-cta">
+            <h3>📚 今日学习任务</h3>
+            <p>Day 16 · RAG入门</p>
+            <a href="day-16.html" class="btn-white">进入今日学习 →</a>
+        </div>
+    </section>
+
+    <!-- 阶段计划 -->
+    <section id="phases" class="reveal">
+        <span class="section-tag">Study Plan</span>
+        <h2 class="section-title">阶段学习计划</h2>
+        <p class="section-desc">4个阶段 · 12周 · 状态由每日微信测验后自动更新</p>
+
+        <div class="phase-card">
+            <div class="phase-header">
+                <div class="phase-title">🚀 第一阶段：AI产品基础认知</div>
+                <div class="phase-duration">第1-4周 · 28天</div>
+            </div>
+            <div class="phase-progress"><div class="phase-progress-bar" id="phase1-bar" style="width:0%"></div></div>
+            <ul class="lesson-list">
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p1-l1"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 1-3：AI产品经理岗位全景图</div>
+                        <div class="lesson-desc">了解AI产品经理与传统产品经理的差异，掌握AI产品分类</div>
+                        <div class="lesson-meta"><span class="lesson-tag">📖 理论</span><span class="lesson-tag">⏱️ 3天</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p1-l2"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 4-7：大语言模型原理入门</div>
+                        <div class="lesson-desc">理解Transformer架构、预训练与微调，建立直觉认知</div>
+                        <div class="lesson-meta"><span class="lesson-tag">🤖 技术</span><span class="lesson-tag">⏱️ 4天</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p1-l3"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 8-14：Prompt Engineering 实战</div>
+                        <div class="lesson-desc">掌握Zero-shot、Few-shot、Chain-of-Thought提示技巧</div>
+                        <div class="lesson-meta"><span class="lesson-tag">✍️ 实战</span><span class="lesson-tag">⏱️ 1周</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p1-l4"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 15-21：RAG与AI应用架构</div>
+                        <div class="lesson-desc">理解检索增强生成原理，学习向量数据库基础概念</div>
+                        <div class="lesson-meta"><span class="lesson-tag">🏗️ 架构</span><span class="lesson-tag">⏱️ 1周</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p1-l5"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 22-28：阶段考核 — AI产品竞品分析</div>
+                        <div class="lesson-desc">选择一款AI产品，完成完整竞品分析报告</div>
+                        <div class="lesson-meta"><span class="lesson-tag">📝 项目</span><span class="lesson-tag">⏱️ 1周</span><span class="lesson-tag">🎯 考核</span></div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-header">
+                <div class="phase-title">📊 第二阶段：产品方法论与数据分析</div>
+                <div class="phase-duration">第5-8周 · 28天</div>
+            </div>
+            <div class="phase-progress"><div class="phase-progress-bar" id="phase2-bar" style="width:0%"></div></div>
+            <ul class="lesson-list">
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p2-l1"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 29-35：互联网产品方法论</div>
+                        <div class="lesson-desc">用户画像、旅程地图、RICE模型、MVP设计</div>
+                        <div class="lesson-meta"><span class="lesson-tag">📖 理论</span><span class="lesson-tag">⏱️ 1周</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p2-l2"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 36-42：数据分析基础</div>
+                        <div class="lesson-desc">Excel/SQL、A/B测试、产品指标（DAU/留存/转化）</div>
+                        <div class="lesson-meta"><span class="lesson-tag">📊 数据</span><span class="lesson-tag">⏱️ 1周</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p2-l3"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 43-49：PRD文档与原型设计</div>
+                        <div class="lesson-desc">PRD标准结构、Axure/墨刀高级功能、AI功能模块设计</div>
+                        <div class="lesson-meta"><span class="lesson-tag">📝 文档</span><span class="lesson-tag">⏱️ 1周</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p2-l4"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 50-56：阶段考核 — AI产品PRD</div>
+                        <div class="lesson-desc">设计一款AI助手，输出完整PRD+原型图</div>
+                        <div class="lesson-meta"><span class="lesson-tag">📝 项目</span><span class="lesson-tag">⏱️ 1周</span><span class="lesson-tag">🎯 考核</span></div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-header">
+                <div class="phase-title">🛠️ 第三阶段：技术理解与工具链</div>
+                <div class="phase-duration">第9-12周 · 28天</div>
+            </div>
+            <div class="phase-progress"><div class="phase-progress-bar" id="phase3-bar" style="width:0%"></div></div>
+            <ul class="lesson-list">
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p3-l1"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 57-63：Python基础与AI API调用</div>
+                        <div class="lesson-desc">Python语法、OpenAI/通义千问API、简单对话机器人Demo</div>
+                        <div class="lesson-meta"><span class="lesson-tag">💻 编程</span><span class="lesson-tag">⏱️ 1周</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p3-l2"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 64-70：AI产品项目管理</div>
+                        <div class="lesson-desc">敏捷开发、Jira/飞书、AI产品特殊迭代节奏</div>
+                        <div class="lesson-meta"><span class="lesson-tag">📋 管理</span><span class="lesson-tag">⏱️ 1周</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p3-l3"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 71-77：AI伦理与合规</div>
+                        <div class="lesson-desc">偏见、隐私、幻觉、内容安全审核机制</div>
+                        <div class="lesson-meta"><span class="lesson-tag">⚖️ 合规</span><span class="lesson-tag">⏱️ 1周</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p3-l4"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">Day 78-84：阶段考核 — 完整项目实战</div>
+                        <div class="lesson-desc">从零设计AI产品全流程：需求→竞品→PRD→原型→排期</div>
+                        <div class="lesson-meta"><span class="lesson-tag">🚀 综合</span><span class="lesson-tag">⏱️ 1周</span><span class="lesson-tag">🎯 考核</span></div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="phase-card">
+            <div class="phase-header">
+                <div class="phase-title">🎯 第四阶段：求职冲刺</div>
+                <div class="phase-duration">第13周起 · 持续</div>
+            </div>
+            <div class="phase-progress"><div class="phase-progress-bar" id="phase4-bar" style="width:0%"></div></div>
+            <ul class="lesson-list">
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p4-l1"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">简历优化与作品集整理</div>
+                        <div class="lesson-desc">学习成果转简历亮点，整理作品集</div>
+                        <div class="lesson-meta"><span class="lesson-tag">📝 求职</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p4-l2"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">面试技巧与模拟面试</div>
+                        <div class="lesson-desc">高频面试题、产品思维题、技术理解题</div>
+                        <div class="lesson-meta"><span class="lesson-tag">🎤 面试</span></div>
+                    </div>
+                </li>
+                <li class="lesson-item">
+                    <div class="lesson-status todo" data-lesson="p4-l3"></div>
+                    <div class="lesson-content">
+                        <div class="lesson-title">岗位投递与跟进</div>
+                        <div class="lesson-desc">筛选目标公司、定制化投递、记录进度</div>
+                        <div class="lesson-meta"><span class="lesson-tag">📨 投递</span></div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        // 日历
+        let currentDate = new Date();
+        const studyStart = new Date(2026, 3, 23);
+        const completedDaysList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]; // 已完成的天数
+        const avgScoreVal = 20.5;
+        const studyDays = 84;
+        const dayTopics = [
+            'AI PM全景图','AI vs 传统PM','AI产品分类','大模型直觉','Transformer原理',
+            '预训练与微调','Token与上下文','Prompt基础','Zero-shot/Few-shot',
+            '多模态AI产品拆解','结构化Prompt','Prompt实战','Prompt项目',
+            'RAG原理','向量数据库','AI应用架构','RAG产品拆解','阶段考核1',
+            '用户画像','用户旅程','需求优先级','MVP设计','产品生命周期',
+            'Excel高阶','SQL基础','A/B测试','产品指标','PRD结构',
+            'Axure/墨刀','AI功能PRD','PRD实战','PRD项目','Python入门',
+            'API调用','对话机器人','敏捷开发','项目管理','数据回流',
+            'AI伦理','隐私安全','内容审核','合规要点','毕业设计1',
+            '毕业设计2','毕业设计3','毕业设计4','毕业设计5','阶段考核3'
+        ];
+
+        function pad2(n) { return n < 10 ? '0'+n : ''+n; }
+        function generateCalendar(year, month) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDay = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            const weekdays = ['日','一','二','三','四','五','六'];
+            weekdays.forEach(d => {
+                const h = document.createElement('div');
+                h.className = 'calendar-day-header'; h.textContent = d;
+                grid.appendChild(h);
+            });
+            for (let i = 0; i < startDay; i++) grid.appendChild(document.createElement('div'));
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dayDiff = Math.floor((date - studyStart) / (1000*60*60*24));
+                const isStudyDay = dayDiff >= 0 && dayDiff < studyDays;
+                const dayNum = dayDiff + 1;
+                const isCompleted = completedDaysList.includes(dayNum);
+                const isToday = date.toDateString() === today.toDateString();
+                const isPast = date < today && !isToday;
+
+                const el = document.createElement('a');
+                el.className = 'calendar-day';
+                if (isToday) el.classList.add('today');
+                else if (isCompleted) el.classList.add('completed');
+                else if (isStudyDay && isPast) el.classList.add('late');
+
+                if (isStudyDay) {
+                    el.href = `day-${pad2(dayNum)}.html`;
+                }
+
+                let content = '';
+                if (isStudyDay && dayTopics[dayDiff]) {
+                    content = `<div class="calendar-day-content">${dayTopics[dayDiff]}</div>`;
+                }
+                el.innerHTML = `<div class="calendar-day-number">${day}</div>${content}`;
+                grid.appendChild(el);
+            }
+            document.getElementById('currentMonth').textContent = `${year}年${month+1}月`;
+        }
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+        }
+        generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+
+        // 初始化统计数字
+        document.getElementById('completedDays').textContent = completedDaysList.length;
+        document.getElementById('avgScore').textContent = avgScoreVal > 0 ? avgScoreVal + '/30' : '--';
+        document.getElementById('totalProgress').textContent = Math.round((completedDaysList.length / studyDays) * 100) + '%';
+        document.getElementById('phase1-bar').style.width = Math.min(100, (completedDaysList.filter(d => d <= 28).length / 28) * 100) + '%';
+
+        (function() {
+            function loadScript(src, onload, onerror) {
+                var s = document.createElement('script');
+                s.src = src; s.onload = onload; s.onerror = onerror;
+                document.head.appendChild(s);
+            }
+            var cdns = [
+                'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
+                'https://unpkg.com/mermaid@10/dist/mermaid.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js'
+            ];
+            function tryLoad(i) {
+                if (i >= cdns.length) return;
+                loadScript(cdns[i], function() {
+                    mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }});
+                }, function() { tryLoad(i + 1); });
+            }
+            tryLoad(0);
+        })();
+    </script>
+</body>
+</html>
