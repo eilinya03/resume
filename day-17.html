@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 17 · RAG产品拆解：AI知识库问答是怎么做的</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f8f9fb; --surface: #ffffff; --text: #1a1a2e;
+  --text-secondary: #4a5568; --text-muted: #718096;
+  --accent: #4f46e5; --accent-light: #818cf8; --accent-warm: #ec4899;
+  --border: #e2e8f0; --border-light: #edf2f7;
+  --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', 'Noto Sans SC', sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; }
+
+nav { position: fixed; top: 0; width: 100%; z-index: 100; padding: 1rem 2rem; transition: all 0.3s; }
+nav.scrolled { background: rgba(255,255,255,0.95); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-light); }
+.nav-inner { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+.nav-logo { font-weight: 800; font-size: 1rem; color: var(--text); text-decoration: none; }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 0.85rem; transition: color 0.3s; }
+.nav-links a:hover { color: var(--accent); }
+
+.hero { min-height: 35vh; display: flex; align-items: center; justify-content: center; padding-top: 80px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%); color: white; text-align: center; }
+.hero-content { max-width: 700px; padding: 0 2rem; }
+.hero h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); font-weight: 900; margin-bottom: 0.5rem; }
+.hero .meta { font-size: 0.85rem; opacity: 0.8; margin-bottom: 0.3rem; }
+.hero .meta span { margin: 0 0.5rem; }
+.status-badge { display: inline-block; padding: 0.2rem 0.8rem; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+
+section { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
+.section-tag { font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; margin-bottom: 0.8rem; display: block; }
+.section-title { font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.5rem; }
+.section-desc { color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+
+.card { background: var(--surface); border: 1px solid var(--border-light); border-radius: 16px; padding: 2rem; box-shadow: var(--shadow); margin-bottom: 2rem; }
+.card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text); }
+.card p { margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.95rem; }
+.card p:last-child { margin-bottom: 0; }
+
+.story-box { background: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(236,72,153,0.06)); border: 1px solid rgba(79,70,229,0.15); border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 2rem; }
+.story-box h3 { font-size: 1rem; font-weight: 700; color: var(--accent); margin-bottom: 0.8rem; }
+.story-box p { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 0.8rem; }
+.story-box p:last-child { margin-bottom: 0; }
+
+.task-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: 16px; padding: 2rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+.task-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
+.task-num { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-warm)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+.task-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.task-desc { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; }
+.task-desc strong { color: var(--text); }
+
+.hint-box { background: var(--bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 1rem 1.2rem; margin-top: 1rem; }
+.hint-box .hint-label { font-size: 0.75rem; font-weight: 700; color: var(--accent); margin-bottom: 0.3rem; }
+.hint-box p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+.cta-box { background: linear-gradient(135deg, var(--accent), var(--accent-warm)); border-radius: 16px; padding: 2rem; color: white; text-align: center; margin-top: 2rem; }
+.cta-box h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+.cta-box p { opacity: 0.9; font-size: 0.9rem; margin-bottom: 1.2rem; }
+
+.mindmap-fallback { background: var(--surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem; }
+.mindmap-fallback h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.8rem; color: var(--text); }
+.mindmap-fallback ul { list-style: none; padding: 0; }
+.mindmap-fallback li { padding: 0.4rem 0; font-size: 0.85rem; color: var(--text-secondary); border-bottom: 1px solid var(--border-light); }
+.mindmap-fallback li:last-child { border-bottom: none; }
+
+.reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+.nav-day { display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; }
+.nav-day a { padding: 0.5rem 1rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; color: white; text-decoration: none; font-size: 0.8rem; font-weight: 500; transition: all 0.3s; }
+.nav-day a:hover { background: rgba(255,255,255,0.2); }
+
+@media (max-width: 768px) { section { padding: 2rem 1rem; } .card { padding: 1.2rem; } .nav-links { display: none; } }
+</style>
+</head>
+<body>
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="learning.html" class="nav-logo">← 学习主页</a>
+    <ul class="nav-links">
+      <li><a href="#story">问题</a></li>
+      <li><a href="#decrypt">解密</a></li>
+      <li><a href="#tasks">任务</a></li>
+    </ul>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="meta">Day 17 <span>·</span> 第一阶段 <span>·</span> RAG与AI应用架构</div>
+    <h1>RAG产品拆解：AI知识库问答是怎么做的</h1>
+    <span class="status-badge">⏳ 等待完成</span>
+    <div class="nav-day">
+      <a href="day-16.html">◀ Day 16</a>
+      <a href="day-18.html">Day 18 ▶</a>
+    </div>
+  </div>
+</section>
+
+<!-- 问题引入 -->
+<section id="story" class="reveal">
+  <span class="section-tag">Problem</span>
+  <h2 class="section-title">知识库问答，看起来简单，做起来全是坑</h2>
+  <div class="story-box">
+    <p>你团队要做一个企业内部的"智能知识库助手"，员工可以上传各种文档——PDF、PPT、Word、Excel——然后提问获取答案。技术方案开会讨论，工程师提出了三个核心问题：</p>
+    <p><strong>问题一：</strong>员工上传了1000份文档，有人提问"这个月的报销流程是什么？"系统检索到了50份包含"报销"二字的文档，但大部分是老版本的制度。AI最后给了一个过时的答案，因为旧文档里"报销"出现的次数更多。</p>
+    <p><strong>问题二：</strong>有人上传了一份50页的年度报告，另一份是"员工报销手册"的第一页截图。用户问"我们今年的总营收是多少？"系统却把那张报销手册截图也当成候选结果，因为上面出现了"员工"和"年度"两个词，AI误以为自己找到了答案，实际上回答了完全无关的内容。</p>
+    <p><strong>问题三：</strong>一个产品经理问"竞品A最近出了什么新功能？"系统里确实有竞品A的分析文档，但那是三个月前写的。用户收到的是旧信息，还以为是当前最新动态，据此做了错误判断。</p>
+    <p><strong>这三个问题分别指向RAG的同一个盲区：检索不是找到"相关"的文档就够了，而是找到"最相关、最准确、最及时"的那一段。</strong></p>
+  </div>
+</section>
+
+<!-- 知识解密 -->
+<section id="decrypt" class="reveal">
+  <span class="section-tag">Knowledge</span>
+  <h2 class="section-title">RAG的检索质量，决定了产品的生死</h2>
+  <div class="card">
+    <p>昨天你学了RAG的基本概念：先检索资料，再让AI回答。今天我们来拆解RAG的"检索"环节——这一步的质量直接决定了AI回答的质量。</p>
+    <p>检索环节有两个关键指标：<strong>召回率</strong>和<strong>精确率</strong>。召回率指的是"正确答案有没有被找到"，精确率指的是"找到的结果里有多少是真正相关的"。</p>
+    <p>这两个指标天然矛盾。召回率提高了，系统可能返回更多结果，导致精确率下降——答案淹没在噪声里。精确率提高了，系统可能太保守，导致召回率下降——正确答案被漏掉了。</p>
+    <p>产品经理要做的事不是自己调算法，而是帮团队定义"什么算相关"。比如用户问"报销流程"，老版本的报销制度算不算相关？如果算，AI可能引用过时的内容。如果不算，用户上传的旧文档里完全没有检索价值了吗？这个边界要产品经理来定。</p>
+  </div>
+
+  <div class="card">
+    <h3>类比：在乱糟糟的抽屉里找钥匙</h3>
+    <p>想象你家里有一个抽屉，里面扔着各种杂物——钥匙、收据、旧手机、充电器、名片。你急着找家门钥匙。RAG的检索过程就像在这个抽屉里翻东西。</p>
+    <p>召回率低的情况：你翻了半天没找到钥匙，其实钥匙在最底下被压住了，你没翻到。这就是"正确答案被遗漏"。</p>
+    <p>精确率低的情况：你翻出来一堆钥匙——家门钥匙、车钥匙、公司门禁卡、抽屉钥匙，你不确定哪一把才是正确的。这就是"噪声淹没了答案"。</p>
+    <p>真正好的检索是：你翻开抽屉，直接拿到了家门钥匙，而且你确认这就是你要找的那一把。但这个理想状态在真实世界里很难实现，产品经理要做的是控制"翻抽屉"的策略。</p>
+  </div>
+
+  <div class="card">
+    <h3>产品经理能控制的三个杠杆</h3>
+    <p><strong>第一，文档切分策略。</strong>一个PDF直接全文扔进数据库？还是切成一段一段？切多长？如果切得太短，上下文会丢失，AI理解不了这段文字在整篇文档里的位置。如果切得太长，检索时可能把不相关的内容也一起带进去。产品经理要和算法团队讨论"切片的颗粒度"。</p>
+    <p><strong>第二，检索结果的排名规则。</strong>系统检索到100段相关内容，但大模型一次只能处理其中几段。哪几段优先？发布时间新的优先？来源可靠的优先？还是关键词匹配度高的优先？产品经理需要定义业务规则，比如"内部制度文件优先于外部参考资料"，"2024年的文档优先于2023年的"。</p>
+    <p><strong>第三，检索不到时的兜底策略。</strong>如果系统检索到的结果相关性都不高，AI应该诚实地说"我找不到相关信息"，还是硬着头皮给出一个基于通用知识的回答？这个选择直接影响用户信任。对于医疗、法律、金融类场景，必须选前者。对于闲聊、创意生成类场景，可以选后者。产品经理要按场景做风险分级。</p>
+  </div>
+</section>
+
+<!-- 今日任务 -->
+<section id="tasks" class="reveal">
+  <span class="section-tag">Today's Mission</span>
+  <h2 class="section-title">三个问题，没有标准答案</h2>
+  <p class="section-desc">下面这三个问题没有对错。重点是你怎么拆解、怎么假设、怎么验证。</p>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-num">1</div>
+      <div class="task-title">选型判断：召回率和精确率，你保哪个？</div>
+    </div>
+    <div class="task-desc">
+      <p>你的产品是一个电商客服助手，回答用户关于产品使用的问题。用户上传了2000份产品说明书和100份用户反馈邮件。</p>
+      <p>现在技术团队说：检索系统只能二选一——要么提高召回率（尽量不漏掉任何可能的答案），要么提高精确率（只返回最匹配的结果）。没有资源同时优化两个。</p>
+      <p><strong>你选哪个？为什么？</strong></p>
+      <p>关键提示：想想用户问"这个产品怎么用"和"这个产品坏了怎么办"，两种场景下"答错了"分别有什么后果。召回率低的后果和精确率低的后果，哪个更难以接受？</p>
+    </div>
+  </div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-num">2</div>
+      <div class="task-title">检索排名的业务规则</div>
+    </div>
+    <div class="task-desc">
+      <p>你们做的是一个企业内部知识库，员工上传了各种文档：制度文件、项目报告、会议纪要、培训材料、竞品分析。</p>
+      <p>用户问："我们上个月的客户满意度是多少？"</p>
+      <p>系统检索到了5份文档：A是一份两年前的客户满意度报告，B是上个月的项目复盘会议纪要（提到了客户反馈），C是客户成功团队的月度汇报（有数据），D是某次培训的PPT（有客户满意度定义），E是销售部门对竞品的分析（也提到了客户满意度对比）。</p>
+      <p><strong>如果你是产品经理，你会给这5份文档设定什么排名规则？哪份应该排在第一位？为什么？</strong></p>
+      <p>思考方向：不要只考虑"关键词匹配"，还要考虑"文档类型"、"时效性"、"内容权威度"——哪些因素对这个问题最重要？</p>
+    </div>
+  </div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-num">3</div>
+      <div class="task-title">一句话说服</div>
+    </div>
+    <div class="task-desc">
+      <p>你的技术负责人想在第一个版本里不处理"检索不到"的情况——直接让AI基于通用知识回答，理由是"用户体验更流畅，不会卡壳"。</p>
+      <p>你担心这会导致AI在知识库里明明没有答案时，仍然一本正经地胡说八道。</p>
+      <p><strong>用一句话（最多两句）说服技术负责人为什么必须设计"检索不到"的兜底机制。</strong></p>
+      <p>限制：不能说"用户会不信任"或"体验不好"这种虚词。必须用一个具体场景或具体风险来说明。</p>
+    </div>
+  </div>
+</section>
+
+<section class="reveal">
+  <span class="section-tag">Mind Map</span>
+  <h2 class="section-title">今日知识图谱</h2>
+  <div class="mindmap-fallback">
+    <h4>RAG检索质量核心概念</h4>
+    <ul>
+      <li><strong>召回率（Recall）</strong>——正确答案有没有被找到，宁可多找不能漏掉</li>
+      <li><strong>精确率（Precision）</strong>——找到的结果里有多少真正相关，宁可少找不能找错</li>
+      <li><strong>召回率与精确率的矛盾</strong>——提高一个通常会降低另一个，产品经理要做权衡</li>
+      <li><strong>文档切分策略</strong>——切片太短丢失上下文，切片太长引入噪声</li>
+      <li><strong>排名规则</strong>——按时效性、文档类型、来源权威度排序，不是只看关键词匹配</li>
+      <li><strong>兜底策略</strong>——检索不到时是说"不知道"还是硬答，按场景风险分级决定</li>
+      <li><strong>产品经理的角色</strong>——定义"什么算相关"、设定业务规则、控制用户体验边界</li>
+    </ul>
+  </div>
+</section>
+
+<section class="reveal">
+  <span class="section-tag">Resources</span>
+  <h2 class="section-title">延伸资源</h2>
+  <div class="card">
+    <p><strong>产品体验</strong></p>
+    <p>打开 Kimi Chat 或 ChatGPT，上传一份你自己的文档，然后问几个具体的问题。观察它的回答是否准确、有没有引用无关内容、有没有"编"出文档里没有的信息。这就是RAG检索质量的直观体验。</p>
+    <p style="margin-top:1rem"><strong>思考练习</strong></p>
+    <p>找一个你常用的产品——微信搜一搜、知乎搜索、淘宝商品搜索——体会它们的"召回率"和"精确率"分别怎么样。微信搜一搜是更偏向召回还是精确？为什么？</p>
+  </div>
+</section>
+
+<div class="cta-box">
+  <h3>📬 完成后微信回复</h3>
+  <p>答完上面三个问题，直接在微信里说"学完了"或发送你的思考。我会出题考你，评分标准是你的思考过程，不是知识记忆。</p>
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+</body>
+</html>
